@@ -186,29 +186,6 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       key: _loginFormKey,
       child: Column(
         children: [
-          // Sign-in hint
-          Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF5EA),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFFF9100).withValues(alpha: 0.5)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.school_rounded, color: Color(0xFFFF9100), size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Sign in with your registered student account.',
-                    style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.black87),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // e mail Input
           _buildStyledTextField(
             controller: _loginEmailController,
@@ -295,29 +272,6 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       key: _signupFormKey,
       child: Column(
         children: [
-          // Pre-registration policy hint
-          Container(
-            margin: const EdgeInsets.only(bottom: 14),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF5EA),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFFF9100).withValues(alpha: 0.5)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.verified_user_rounded, color: Color(0xFFFF9100), size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Pre-registered emails only. 1 email can only be registered 1 time.',
-                    style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.black87),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           _buildStyledTextField(
             controller: _nameController,
             hintText: 'Full Name',
