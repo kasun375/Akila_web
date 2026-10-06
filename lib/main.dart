@@ -71,10 +71,33 @@ class AkilaMathsLmsApp extends StatelessWidget {
       ),
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {
-          if (!auth.isAuthenticated) {
-            return const AuthScreen();
-          }
-          return const ResponsiveNavigation();
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 550),
+            reverseDuration: const Duration(milliseconds: 500),
+            switchOutCurve: Curves.easeInCubic,
+            switchInCurve: Curves.easeOutCubic,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              final isAuth = child.key == const ValueKey('AuthScreen');
+              if (isAuth) {
+                // Login screen slides smoothly to left as it exits
+                final slideOut = Tween<Offset>(
+                  begin: const Offset(-1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(animation);
+                return SlideTransition(position: slideOut, child: child);
+              } else {
+                // Dashboard screen enters sliding from right to left
+                final slideIn = Tween<Offset>(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(animation);
+                return SlideTransition(position: slideIn, child: child);
+              }
+            },
+            child: !auth.isAuthenticated
+                ? const AuthScreen(key: ValueKey('AuthScreen'))
+                : const ResponsiveNavigation(key: ValueKey('MainAppScreen')),
+          );
         },
       ),
     );
