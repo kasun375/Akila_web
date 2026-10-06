@@ -28,6 +28,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   final _schoolController = TextEditingController();
   String _selectedGrade = '2026 A/L';
 
+  bool _isLoginPasswordObscured = true;
+  bool _isSignupPasswordObscured = true;
+
   @override
   void initState() {
     super.initState();
@@ -195,12 +198,26 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
           ),
           const SizedBox(height: 16),
 
-          // Password Input
+          // Password Input with Eyeball view/hide option
           _buildStyledTextField(
             controller: _loginPasswordController,
             hintText: 'Password',
-            obscureText: true,
+            obscureText: _isLoginPasswordObscured,
             validator: (v) => v != null && v.length >= 6 ? null : 'Password too short',
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isLoginPasswordObscured
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+                color: const Color(0xFF9C9286),
+                size: 22,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isLoginPasswordObscured = !_isLoginPasswordObscured;
+                });
+              },
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -311,11 +328,26 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             ),
           ),
           const SizedBox(height: 12),
+          // Password Input with Eyeball view/hide option
           _buildStyledTextField(
             controller: _signupPasswordController,
             hintText: 'Password',
-            obscureText: true,
+            obscureText: _isSignupPasswordObscured,
             validator: (v) => v != null && v.length >= 6 ? null : 'Min 6 characters',
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isSignupPasswordObscured
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+                color: const Color(0xFF9C9286),
+                size: 22,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isSignupPasswordObscured = !_isSignupPasswordObscured;
+                });
+              },
+            ),
           ),
           const SizedBox(height: 20),
 
@@ -382,6 +414,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
@@ -398,6 +431,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         filled: true,
         fillColor: const Color(0xFFFFF5EA).withValues(alpha: 0.75), // Semi-transparent cream fill color
         contentPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
