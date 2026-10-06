@@ -13,8 +13,12 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
+class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   late TabController _tabController;
+  late AnimationController _cardAnimationController;
+  late Animation<Offset> _cardSlideAnimation;
+  late Animation<double> _cardFadeAnimation;
+
   final _loginFormKey = GlobalKey<FormState>();
   final _signupFormKey = GlobalKey<FormState>();
 
@@ -35,11 +39,36 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+
+    _cardAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+
+    _cardSlideAnimation = Tween<Offset>(
+      begin: const Offset(1.2, 0.0), // Starts outside from the right
+      end: Offset.zero,             // Slides left into position
+    ).animate(CurvedAnimation(
+      parent: _cardAnimationController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _cardFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _cardAnimationController,
+      curve: Curves.easeOut,
+    ));
+
+    // Trigger card slide-in animation on opening login screen
+    _cardAnimationController.forward();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _cardAnimationController.dispose();
     _loginEmailController.dispose();
     _loginPasswordController.dispose();
     _nameController.dispose();
@@ -88,7 +117,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               ),
             ),
 
-          // 2. Interactive 50% Transparent Glass Card (For both Desktop & Mobile apps)
+          // 2. Interactive 50% Transparent Glass Card with Slide-in Entrance Animation
           SafeArea(
             child: Align(
               alignment: isDesktop ? Alignment.centerRight : Alignment.center,
@@ -99,10 +128,14 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                   top: 20,
                   bottom: 20,
                 ),
-                child: SingleChildScrollView(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: BackdropFilter(
+                child: SlideTransition(
+                  position: _cardSlideAnimation,
+                  child: FadeTransition(
+                    opacity: _cardFadeAnimation,
+                    child: SingleChildScrollView(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
                         width: isDesktop ? 410 : (size.width > 480 ? 410 : size.width * 0.9),
@@ -168,17 +201,19 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                           },
                         ),
                       ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+                    ), // Column
+                  ), // Container
+                ), // BackdropFilter
+              ), // ClipRRect
+            ), // SingleChildScrollView
+          ), // FadeTransition
+        ), // SlideTransition
+      ), // Padding
+    ), // Align
+  ), // SafeArea
+],
+),
+);
   }
 
   // --- Sign In View (Matching exact Login Ui.jpg inputs and orange buttons) ---

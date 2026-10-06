@@ -37,7 +37,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider(authService)),
         ChangeNotifierProvider(create: (_) => ClassProvider(dbService)),
         ChangeNotifierProvider(create: (_) => ContentProvider(dbService)),
-        ChangeNotifierProvider(create: (_) => PaymentProvider(dbService, payHereService)),
+        ChangeNotifierProvider(
+          create: (_) => PaymentProvider(dbService, payHereService),
+        ),
       ],
       child: const AkilaMathsLmsApp(),
     ),
