@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1011074403515",
+    "project_id": "akila-maths-lms",
+    "storage_bucket": "akila-maths-lms.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1011074403515:android:56078339629188705fad9e",
+        "android_client_info": {
+          "package_name": "com.akilajayaweera.akila_maths_lms"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1011074403515-dr8h5l56lff305s3a57ne1ol6dpjnlsc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByLvBO3iQE4ea9gdos7ODMcz_9ixecNVc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1011074403515-dr8h5l56lff305s3a57ne1ol6dpjnlsc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

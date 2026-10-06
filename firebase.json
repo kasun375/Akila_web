@@ -1,0 +1,39 @@
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "akila-maths-lms",
+          "appId": "1:1011074403515:android:56078339629188705fad9e",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "akila-maths-lms",
+          "configurations": {
+            "android": "1:1011074403515:android:56078339629188705fad9e",
+            "ios": "1:1011074403515:ios:44ba49e6e783d3de5fad9e",
+            "macos": "1:1011074403515:ios:44ba49e6e783d3de5fad9e",
+            "web": "1:1011074403515:web:e741365be8fb36235fad9e",
+            "windows": "1:1011074403515:web:44adbf66e23c39e45fad9e"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "users": [
+    {
+      "uid": "adm_001",
+      "role": "admin",
+      "name": "Akila Jayaweera",
+      "email": "akila@akilamaths.lk",
+      "phone": "+94 71 999 8888",
+      "grade": "Teacher / Lecturer",
+      "school": "Combined Maths Academy",
+      "profilePicUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+      "createdAt": "2026-10-04T09:20:19.761326"
+    },
+    {
+      "uid": "std_1001",
+      "role": "student",
+      "name": "Kamal Perera",
+      "email": "student@akilamaths.lk",
+      "phone": "+94 77 123 4567",
+      "grade": "2026 A/L",
+      "school": "Ananda College, Colombo",
+      "profilePicUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+      "createdAt": "2026-10-04T09:20:19.763663"
+    },
+    {
+      "uid": "std_1002",
+      "role": "student",
+      "name": "Nipuni Fernando",
+      "email": "nipuni@gmail.com",
+      "phone": "+94 71 444 5555",
+      "grade": "2026 A/L",
+      "school": "Visakha Vidyalaya, Colombo",
+      "profilePicUrl": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150",
+      "createdAt": "2026-10-04T09:20:19.763663"
+    }
+  ],
+  "classes": [
+    {
+      "id": "cls_2026_theory",
+      "title": "2026 A/L Combined Maths - Theory & Revision",
+      "description": "Comprehensive coverage of Pure Maths (Calculus, Trigonometry) and Applied Maths (Statics, Kinematics).",
+      "schedule": "Every Sunday | 8:00 AM - 1:00 PM",
+      "monthlyFee": 3500.0,
+      "teacherName": "Akila Jayaweera",
+      "studentCount": 342,
+      "active": true
+    },
+    {
+      "id": "cls_2026_revision",
+      "title": "2026 A/L Paper Class & Model Papers",
+      "description": "Targeted model paper discussions and time management strategies for A/L final exams.",
+      "schedule": "Every Wednesday | 5:00 PM - 8:30 PM",
+      "monthlyFee": 2800.0,
+      "teacherName": "Akila Jayaweera",
+      "studentCount": 215,
+      "active": true
+    },
+    {
+      "id": "cls_2027_theory",
+      "title": "2027 A/L Combined Maths - Complete Foundation",
+      "description": "Step-by-step introduction to Quadratic Equations, Matrices, Vectors, and Functions.",
+      "schedule": "Every Saturday | 8:00 AM - 12:30 PM",
+      "monthlyFee": 3200.0,
+      "teacherName": "Akila Jayaweera",
+      "studentCount": 188,
+      "active": true
+    }
+  ],
+  "enrollments": [],
+  "content": [
+    {
+      "id": "cnt_001",
+      "classId": "cls_2026_theory",
+      "className": "2026 A/L Combined Maths - Theory & Revision",
+      "type": "recording",
+      "title": "Pure Maths - Differential Calculus Part 1",
+      "description": "Full 4-hour recorded session explaining first principles, chain rule, implicit differentiation.",
+      "fileUrl": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400",
+      "fileSize": "HD Video",
+      "uploadedAt": "2026-10-02T09:20:19.763663"
+    },
+    {
+      "id": "cnt_002",
+      "classId": "cls_2026_theory",
+      "className": "2026 A/L Combined Maths - Theory & Revision",
+      "type": "studypack",
+      "title": "Study Pack 04: Statics - Friction & Equilibrium Notes (PDF)",
+      "description": "Comprehensive theory booklet with 50 worked examples and past paper problems.",
+      "fileUrl": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      "fileSize": "4.8 MB (PDF)",
+      "uploadedAt": "2026-09-30T09:20:19.764199"
+    }
+  ],
+  "payments": []
+}
