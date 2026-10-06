@@ -28,6 +28,14 @@ class AuthProvider extends ChangeNotifier {
   bool get isGoogleLoading => _isGoogleLoading;
   String? get errorMessage => _errorMessage;
 
+  String _cleanError(Object e) {
+    final str = e.toString();
+    if (str.startsWith('Exception: ')) {
+      return str.substring('Exception: '.length);
+    }
+    return str;
+  }
+
   Future<bool> signIn(String email, String password) async {
     _setEmailLoading(true);
     _errorMessage = null;
@@ -36,7 +44,7 @@ class AuthProvider extends ChangeNotifier {
       _setEmailLoading(false);
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = _cleanError(e);
       _setEmailLoading(false);
       return false;
     }
@@ -50,7 +58,7 @@ class AuthProvider extends ChangeNotifier {
       _setGoogleLoading(false);
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = _cleanError(e);
       _setGoogleLoading(false);
       return false;
     }
@@ -80,10 +88,14 @@ class AuthProvider extends ChangeNotifier {
       _setEmailLoading(false);
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = _cleanError(e);
       _setEmailLoading(false);
       return false;
     }
+  }
+
+  Future<void> preRegisterStudentEmail(String email) async {
+    await _authService.preRegisterEmail(email);
   }
 
   Future<void> signOut() async {
@@ -111,7 +123,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = _cleanError(e);
       _setLoading(false);
       return false;
     }
