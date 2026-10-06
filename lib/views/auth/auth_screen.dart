@@ -186,7 +186,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       key: _loginFormKey,
       child: Column(
         children: [
-          // Pre-registration policy hint
+          // Sign-in hint
           Container(
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -197,11 +197,11 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             ),
             child: Row(
               children: [
-                const Icon(Icons.lock_person_rounded, color: Color(0xFFFF9100), size: 18),
+                const Icon(Icons.school_rounded, color: Color(0xFFFF9100), size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Access is limited to pre-registered students only.',
+                    'Sign in with your registered student account.',
                     style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.black87),
                   ),
                 ),

@@ -17,7 +17,7 @@ class AuthService {
 
   static final Map<String, String> _profilePicCache = {};
 
-  // Pre-registered emails set (seeded with default demo/admin emails)
+  // Pre-registered / Allowed emails set
   final Set<String> _preRegisteredEmails = {
     'student@akilamaths.lk',
     'student.google@akilamaths.lk',
@@ -76,42 +76,6 @@ class AuthService {
       }
     } catch (e) {
       debugPrint("Firestore _isEmailAlreadyRegistered query error: $e");
-    }
-    return false;
-  }
-
-  /// Checks if an email is pre-registered by admin / lecturer
-  Future<bool> _isEmailPreRegistered(String email) async {
-    final lower = email.trim().toLowerCase();
-    if (lower.isEmpty) return false;
-
-    // Teachers, Admins, or pre-seeded emails are automatically pre-registered
-    if (lower.contains('admin') ||
-        lower.contains('teacher') ||
-        lower.contains('akila') ||
-        _preRegisteredEmails.contains(lower) ||
-        _registeredEmails.contains(lower)) {
-      return true;
-    }
-
-    try {
-      final preDoc = await _firestore.collection('pre_registered_emails').doc(lower).get();
-      if (preDoc.exists) {
-        _preRegisteredEmails.add(lower);
-        return true;
-      }
-
-      final userQuery = await _firestore
-          .collection('users')
-          .where('email', isEqualTo: lower)
-          .limit(1)
-          .get();
-      if (userQuery.docs.isNotEmpty) {
-        _preRegisteredEmails.add(lower);
-        return true;
-      }
-    } catch (e) {
-      debugPrint("Firestore _isEmailPreRegistered query error: $e");
     }
     return false;
   }
@@ -229,15 +193,9 @@ class AuthService {
   }) async {
     final lower = email.trim().toLowerCase();
 
-    // Verify email is pre-registered
-    final preReg = await _isEmailPreRegistered(lower);
-    if (!preReg) {
-      throw Exception("Access Denied: '$email' is not pre-registered. Only pre-registered users can sign in. Please contact the administrator.");
-    }
-
     try {
       final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
+        email: lower,
         password: password,
       );
       final uid = credential.user!.uid;
@@ -247,8 +205,7 @@ class AuthService {
         final persistentPic = _getSavedProfilePic(uid, userFromDoc.profilePicUrl);
         _currentUser = userFromDoc.copyWith(profilePicUrl: persistentPic);
       } else {
-        final lowerEmail = email.toLowerCase();
-        final isTeacher = lowerEmail.contains('admin') || lowerEmail.contains('akila') || lowerEmail.contains('teacher');
+        final isTeacher = lower.contains('admin') || lower.contains('akila') || lower.contains('teacher');
         final defaultPic = isTeacher ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '';
         final persistentPic = _getSavedProfilePic(uid, defaultPic);
 
@@ -256,7 +213,7 @@ class AuthService {
           uid: uid,
           role: isTeacher ? 'admin' : 'student',
           name: email.split('@')[0].toUpperCase(),
-          email: email,
+          email: lower,
           phone: isTeacher ? '+94 71 999 8888' : '+94 77 123 4567',
           grade: isTeacher ? 'Teacher / Lecturer' : '2026 A/L',
           school: isTeacher ? 'Combined Maths Academy' : 'Royal College, Colombo',
@@ -267,10 +224,19 @@ class AuthService {
       _persistUser(_currentUser!);
       _userStreamController.add(_currentUser);
       return _currentUser!;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        throw Exception("No account found for '$lower'. Please click 'New Register' to create your account.");
+      } else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        throw Exception("Incorrect password. Please check your password or try again.");
+      } else if (e.code == 'invalid-email') {
+        throw Exception("Invalid email address format.");
+      }
+      debugPrint("FirebaseAuthException signIn: ${e.code} - ${e.message}");
+      return _signInDemoFallback(lower);
     } catch (e) {
-      if (e.toString().contains("Access Denied")) rethrow;
       debugPrint("Firebase Auth signIn error: $e. Falling back to local authentication mode.");
-      return _signInDemoFallback(email);
+      return _signInDemoFallback(lower);
     }
   }
 
@@ -286,21 +252,15 @@ class AuthService {
   }) async {
     final lower = email.trim().toLowerCase();
 
-    // 1. Enforce 1 email only can add for 1 time
+    // Enforce 1 email only can add for 1 time
     final alreadyReg = await _isEmailAlreadyRegistered(lower);
     if (alreadyReg) {
-      throw Exception("Registration Failed: '$email' is already registered. 1 email can only be registered 1 time. Please sign in.");
-    }
-
-    // 2. Enforce pre-registered emails only
-    final preReg = await _isEmailPreRegistered(lower);
-    if (!preReg) {
-      throw Exception("Registration Denied: '$email' is not pre-registered. Access is restricted to pre-registered users only.");
+      throw Exception("Registration Failed: '$email' is already registered. 1 email can only be registered 1 time. Please sign in instead.");
     }
 
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
+        email: lower,
         password: password,
       );
       final uid = credential.user!.uid;
@@ -311,7 +271,7 @@ class AuthService {
         uid: uid,
         role: role,
         name: name,
-        email: email,
+        email: lower,
         phone: phone,
         grade: grade,
         school: school,
@@ -321,12 +281,30 @@ class AuthService {
       _persistUser(_currentUser!);
       _userStreamController.add(_currentUser);
       return _currentUser!;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        _registeredEmails.add(lower);
+        throw Exception("Registration Failed: '$email' is already registered. 1 email can only be registered 1 time. Please sign in.");
+      } else if (e.code == 'weak-password') {
+        throw Exception("Password is too weak. Please use at least 6 characters.");
+      } else if (e.code == 'invalid-email') {
+        throw Exception("Invalid email address format.");
+      }
+      debugPrint("FirebaseAuthException signUp: ${e.code} - ${e.message}");
+      return _signUpDemoFallback(
+        name: name,
+        email: lower,
+        phone: phone,
+        grade: grade,
+        school: school,
+        role: role,
+      );
     } catch (e) {
-      if (e.toString().contains("Registration Failed") || e.toString().contains("Registration Denied")) rethrow;
+      if (e.toString().contains("Registration Failed")) rethrow;
       debugPrint("Firebase Auth signUp error: $e. Falling back to local registration.");
       return _signUpDemoFallback(
         name: name,
-        email: email,
+        email: lower,
         phone: phone,
         grade: grade,
         school: school,
@@ -359,14 +337,6 @@ class AuthService {
       final uid = firebaseUser.uid;
       final lower = (firebaseUser.email ?? '').trim().toLowerCase();
 
-      if (lower.isNotEmpty) {
-        final preReg = await _isEmailPreRegistered(lower);
-        if (!preReg) {
-          await _auth.signOut();
-          throw Exception("Access Denied: '$lower' is not pre-registered. Only pre-registered users can sign in.");
-        }
-      }
-
       final doc = await _firestore.collection('users').doc(uid).get();
 
       if (doc.exists && doc.data() != null) {
@@ -395,7 +365,6 @@ class AuthService {
       _userStreamController.add(_currentUser);
       return _currentUser!;
     } catch (e) {
-      if (e.toString().contains("Access Denied")) rethrow;
       debugPrint("Google Sign-In error: $e. Falling back to Google demo mode.");
       return _signInGoogleDemoFallback();
     }
@@ -474,11 +443,8 @@ class AuthService {
 
   UserModel _signInDemoFallback(String email) {
     final lowerEmail = email.toLowerCase().trim();
-    if (lowerEmail.isNotEmpty && !_preRegisteredEmails.contains(lowerEmail) && !lowerEmail.contains('admin') && !lowerEmail.contains('akila') && !lowerEmail.contains('teacher')) {
-      throw Exception("Access Denied: '$email' is not pre-registered. Please contact administrator.");
-    }
     final isTeacher = lowerEmail.contains('admin') || lowerEmail.contains('akila') || lowerEmail.contains('teacher');
-    final uid = isTeacher ? 'adm_001' : 'std_1001';
+    final uid = isTeacher ? 'adm_001' : 'std_${lowerEmail.hashCode.abs()}';
     final defaultPic = isTeacher ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
     final persistentPic = _getSavedProfilePic(uid, defaultPic);
 
@@ -508,9 +474,6 @@ class AuthService {
     final lower = email.toLowerCase().trim();
     if (_registeredEmails.contains(lower)) {
       throw Exception("Registration Failed: '$email' is already registered. 1 email can only be registered 1 time.");
-    }
-    if (!_preRegisteredEmails.contains(lower) && !lower.contains('admin') && !lower.contains('akila') && !lower.contains('teacher')) {
-      throw Exception("Registration Denied: '$email' is not pre-registered.");
     }
 
     final uid = 'uid_${DateTime.now().millisecondsSinceEpoch}';
