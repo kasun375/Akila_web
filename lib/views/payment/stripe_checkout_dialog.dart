@@ -111,8 +111,6 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
     final cardHolderName = _nameController.text.trim();
 
     try {
-      final amountInCents = (widget.classItem.monthlyFee * 100).toInt();
-
       // 1. Create Token via Stripe Publishable Key (CORS-enabled for web)
       final tokenResponse = await http.post(
         Uri.parse(StripeConfig.tokensUrl),
@@ -143,31 +141,34 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
 
       final String tokenId = tokenData['id'];
 
-      // 2. Submit Charge to User's Stripe Merchant Account via Secret Key
+      // 2. Submit Charge via Backend Server (Render) securely using valid STRIPE_SECRET_KEY
       final chargeResponse = await http.post(
-        Uri.parse('https://api.stripe.com/v1/charges'),
+        Uri.parse('${StripeConfig.backendUrl}/process-card-payment'),
         headers: {
-          'Authorization': 'Bearer ${StripeConfig.secretKey}',
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: {
-          'amount': amountInCents.toString(),
-          'currency': StripeConfig.currency.toLowerCase(),
-          'source': tokenId,
-          'description':
-              '${widget.classItem.title} - ${widget.student.name} (${widget.orderId})',
-          'receipt_email': widget.student.email.isNotEmpty
+        body: jsonEncode({
+          'tokenId': tokenId,
+          'amount': widget.classItem.monthlyFee,
+          'currency': StripeConfig.currency,
+          'description': '${widget.classItem.title} - ${widget.student.name} (${widget.orderId})',
+          'studentEmail': widget.student.email.isNotEmpty
               ? widget.student.email
               : 'student@akilamaths.lk',
-        },
+          'metadata': {
+            'studentId': widget.student.uid,
+            'classId': widget.classItem.id,
+            'className': widget.classItem.title,
+            'orderId': widget.orderId,
+          }
+        }),
       );
 
       final chargeData = jsonDecode(chargeResponse.body);
 
-      if (chargeResponse.statusCode == 200 &&
-          (chargeData['paid'] == true || chargeData['status'] == 'succeeded')) {
+      if (chargeResponse.statusCode == 200 && chargeData['success'] == true) {
         final chargeId =
-            chargeData['id'] ?? 'ch_live_${DateTime.now().millisecondsSinceEpoch}';
+            chargeData['chargeId'] ?? 'ch_live_${DateTime.now().millisecondsSinceEpoch}';
         final last4 = rawCardNumber.length >= 4
             ? rawCardNumber.substring(rawCardNumber.length - 4)
             : '4242';
@@ -186,7 +187,7 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
           );
         }
       } else {
-        final errorMsg = chargeData['error']?['message'] ??
+        final errorMsg = chargeData['error'] ??
             'Transaction could not be completed. Please check card balance or try another card.';
         setState(() {
           _isProcessing = false;

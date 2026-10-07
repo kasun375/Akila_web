@@ -88,6 +88,59 @@ app.post('/create-payment-intent', async (req, res) => {
   }
 });
 
+// Process Card Payment via Stripe Token Endpoint
+app.post('/process-card-payment', async (req, res) => {
+  try {
+    const { tokenId, amount, currency = 'lkr', description, studentEmail, metadata } = req.body;
+
+    if (!tokenId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Card token is required',
+      });
+    }
+
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid amount. Amount must be a positive number.',
+      });
+    }
+
+    const amountInCents = Math.round(Number(amount) * 100);
+
+    const charge = await stripe.charges.create({
+      amount: amountInCents,
+      currency: (currency || 'lkr').toLowerCase(),
+      source: tokenId,
+      description: description || 'Class Fee Payment',
+      receipt_email: studentEmail || undefined,
+      metadata: metadata || {},
+    });
+
+    if (charge.paid || charge.status === 'succeeded') {
+      return res.status(200).json({
+        success: true,
+        chargeId: charge.id,
+        status: charge.status,
+        amount: charge.amount / 100,
+        currency: charge.currency,
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: charge.failure_message || 'Payment processing failed',
+      });
+    }
+  } catch (error) {
+    console.error('Error processing card payment:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Payment transaction failed',
+    });
+  }
+});
+
 // Verify Payment Status Endpoint
 app.get('/verify-payment/:paymentIntentId', async (req, res) => {
   try {
