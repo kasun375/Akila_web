@@ -1,0 +1,20 @@
+{
+  "name": "akila-maths-lms-web-app",
+  "version": "1.0.0",
+  "description": "Akila Com Maths LMS Flutter Web App and Payment Backend",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "build:web": "flutter build web --release && node -e \"fs.cpSync('build/web', 'server/public', {recursive: true})\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "stripe": "^14.21.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

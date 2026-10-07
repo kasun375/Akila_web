@@ -18,20 +18,21 @@ app.use(express.json());
 const path = require('path');
 const fs = require('fs');
 
-// Determine static path for Flutter Web app (server/public or ../build/web)
-const serverPublicPath = path.join(__dirname, 'public');
-const flutterBuildPath = path.join(__dirname, '../build/web');
+// Candidate static paths for Flutter Web app
+const candidatePaths = [
+  path.join(__dirname, 'public'),
+  path.join(__dirname, '../build/web'),
+  path.join(process.cwd(), 'server/public'),
+  path.join(process.cwd(), 'build/web'),
+];
 
-let staticPath = null;
-if (fs.existsSync(serverPublicPath)) {
-  staticPath = serverPublicPath;
-} else if (fs.existsSync(flutterBuildPath)) {
-  staticPath = flutterBuildPath;
-}
+let staticPath = candidatePaths.find((p) => fs.existsSync(path.join(p, 'index.html')));
 
 if (staticPath) {
   console.log(`📁 Serving Flutter Web App from: ${staticPath}`);
   app.use(express.static(staticPath));
+} else {
+  console.warn("⚠️ Flutter Web build index.html not found in any standard path.");
 }
 
 // Health Check Endpoint
