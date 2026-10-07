@@ -59,10 +59,13 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
               elevation: 0,
               title: Row(
                 children: [
-                  const Icon(Icons.calculate_rounded, color: Colors.white, size: 24),
-                  const SizedBox(width: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset('assets/Logo A.png', width: 26, height: 26, fit: BoxFit.contain),
+                  ),
+                  const SizedBox(width: 10),
                   Text(
-                    'Akila Jayaweera LMS',
+                    'Akila Com Maths',
                     style: AppStyles.h3(context).copyWith(color: Colors.white, fontSize: 16),
                   ),
                 ],
@@ -148,9 +151,18 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'Combined Maths Learning Management System',
-            style: AppStyles.h3(context).copyWith(color: AppColors.primary),
+          Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: Image.asset('assets/Logo A.png', width: 32, height: 32, fit: BoxFit.contain),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Akila Com Maths',
+                style: AppStyles.h3(context).copyWith(color: AppColors.primary),
+              ),
+            ],
           ),
           Row(
             children: [

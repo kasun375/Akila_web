@@ -5,7 +5,10 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_styles.dart';
 import '../../models/class_model.dart';
 import '../../models/content_model.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/class_provider.dart';
 import '../../providers/content_provider.dart';
+import '../../providers/payment_provider.dart';
 
 class ContentViewerScreen extends StatefulWidget {
   final ClassModel classItem;
@@ -33,7 +36,15 @@ class _ContentViewerScreenState extends State<ContentViewerScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+    final classProvider = Provider.of<ClassProvider>(context);
     final contentProvider = Provider.of<ContentProvider>(context);
+    final paymentProvider = Provider.of<PaymentProvider>(context);
+
+    final student = auth.user;
+    final enrollment = classProvider.getEnrollment(student?.uid ?? '', widget.classItem.id);
+    final bool isPaid = auth.isAdmin || (enrollment != null && enrollment.paymentStatus == 'paid');
+
     final recordings = contentProvider.getRecordings(widget.classItem.id);
     final studyPacks = contentProvider.getStudyPacks(widget.classItem.id);
 
@@ -43,23 +54,234 @@ class _ContentViewerScreenState extends State<ContentViewerScreen> with SingleTi
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: Text(widget.classItem.title),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.accent,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
-          tabs: [
-            Tab(icon: const Icon(Icons.video_collection_rounded), text: 'Recordings (${recordings.length})'),
-            Tab(icon: const Icon(Icons.folder_special_rounded), text: 'Study Packs (${studyPacks.length})'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildRecordingsTab(context, recordings),
-          _buildStudyPacksTab(context, studyPacks),
+        actions: [
+          if (widget.classItem.zoomUrl.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isPaid ? AppColors.accent : Colors.grey.shade700,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                icon: Icon(isPaid ? Icons.videocam_rounded : Icons.lock_rounded, size: 18),
+                label: Text(
+                  isPaid ? 'Join Zoom Live' : 'Zoom Live (Locked)',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                onPressed: () async {
+                  if (!isPaid) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Zoom link is locked. Please complete checkout to join live class.'),
+                        backgroundColor: AppColors.warning,
+                      ),
+                    );
+                    return;
+                  }
+                  final uri = Uri.parse(widget.classItem.zoomUrl.trim());
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Cannot launch Zoom URL: ${widget.classItem.zoomUrl}')),
+                      );
+                    }
+                  }
+                },
+              ),
+            ),
         ],
+        bottom: isPaid
+            ? TabBar(
+                controller: _tabController,
+                indicatorColor: AppColors.accent,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white60,
+                tabs: [
+                  Tab(icon: const Icon(Icons.video_collection_rounded), text: 'Recordings (${recordings.length})'),
+                  Tab(icon: const Icon(Icons.folder_special_rounded), text: 'Study Packs (${studyPacks.length})'),
+                ],
+              )
+            : null,
+      ),
+      body: !isPaid
+          ? _buildPaymentRequiredLockScreen(context, student, paymentProvider, classProvider)
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildRecordingsTab(context, recordings),
+                _buildStudyPacksTab(context, studyPacks),
+              ],
+            ),
+    );
+  }
+
+  /// Lock screen shown to students who haven't completed class payment
+  Widget _buildPaymentRequiredLockScreen(
+    BuildContext context,
+    dynamic student,
+    PaymentProvider paymentProvider,
+    ClassProvider classProvider,
+  ) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 540),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 20,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFFCA5A5), width: 2),
+                ),
+                child: const Icon(
+                  Icons.lock_person_rounded,
+                  color: Color(0xFFDC2626),
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'LMS Content Locked',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Class LMS recordings and PDF study packs are available only after completing monthly class fees.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Class & Fee Info Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Enrolled Class:', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                        Expanded(
+                          child: Text(
+                            widget.classItem.title,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Monthly Fee:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        Text(
+                          'Rs. ${widget.classItem.monthlyFee.toStringAsFixed(2)} LKR',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Pay Now Button (Stripe / PayHere)
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4F46E5),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 4,
+                  ),
+                  icon: const Icon(Icons.payment_rounded, size: 22),
+                  label: const Text(
+                    'Pay Fees Now to Unlock Content',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: () async {
+                    if (student != null) {
+                      await classProvider.enrollStudent(
+                        studentId: student.uid,
+                        studentName: student.name,
+                        studentEmail: student.email,
+                        classItem: widget.classItem,
+                      );
+
+                      if (!context.mounted) return;
+
+                      final resp = await paymentProvider.makeClassPayment(
+                        context: context,
+                        student: student,
+                        classItem: widget.classItem,
+                      );
+
+                      if (context.mounted) {
+                        if (resp.isSuccess) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Payment Completed! Class LMS Content and Zoom link unlocked.'),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                          setState(() {});
+                        } else if (resp.message.isNotEmpty && !resp.message.contains('cancelled')) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(resp.message)),
+                          );
+                        }
+                      }
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -146,7 +368,7 @@ class _ContentViewerScreenState extends State<ContentViewerScreen> with SingleTi
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 36),

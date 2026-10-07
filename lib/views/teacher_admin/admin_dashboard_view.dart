@@ -111,7 +111,7 @@ class AdminDashboardView extends StatelessWidget {
                   value: AppStyles.formatLKR(totalRevenue),
                   icon: Icons.account_balance_wallet_rounded,
                   color: AppColors.success,
-                  subText: 'PayHere Gateway & Bank Transfers',
+                  subText: 'Online Fee Payments',
                 ),
               ],
             ),

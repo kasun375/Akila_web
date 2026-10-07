@@ -20,145 +20,68 @@ class DatabaseService {
   final _paymentStream = StreamController<List<PaymentModel>>.broadcast();
 
   DatabaseService() {
-    _seedInitialData();
     _listenToFirestore();
   }
 
   /// Listens to live Cloud Firestore snapshot collections and syncs real-time updates
   void _listenToFirestore() {
-    // 1. Classes Stream
+    // 1. Classes Stream (Admin-created classes only)
     _firestore.collection('classes').snapshots().listen((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        _classes.clear();
-        for (final doc in snapshot.docs) {
-          _classes.add(ClassModel.fromMap(doc.data(), doc.id));
+      _classes.clear();
+      for (final doc in snapshot.docs) {
+        // Purge legacy system seeded IDs if stored in Firestore from past runs
+        if (doc.id == 'cls_2026_theory' ||
+            doc.id == 'cls_2026_revision' ||
+            doc.id == 'cls_2027_theory') {
+          _firestore.collection('classes').doc(doc.id).delete().catchError((_) {});
+          continue;
         }
-        _classStream.add(_classes);
+        _classes.add(ClassModel.fromMap(doc.data(), doc.id));
       }
+      _classStream.add(_classes);
     }, onError: (e) {
       debugPrint("Firestore classes stream error: $e");
     });
 
     // 2. Enrollments Stream
     _firestore.collection('enrollments').snapshots().listen((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        _enrollments.clear();
-        for (final doc in snapshot.docs) {
-          _enrollments.add(EnrollmentModel.fromMap(doc.data(), doc.id));
-        }
-        _enrollmentStream.add(_enrollments);
+      _enrollments.clear();
+      for (final doc in snapshot.docs) {
+        _enrollments.add(EnrollmentModel.fromMap(doc.data(), doc.id));
       }
+      _enrollmentStream.add(_enrollments);
     }, onError: (e) {
       debugPrint("Firestore enrollments stream error: $e");
     });
 
-    // 3. Content Stream
+    // 3. Content Stream (Admin-uploaded content only)
     _firestore.collection('content').snapshots().listen((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        _contentList.clear();
-        for (final doc in snapshot.docs) {
-          _contentList.add(ContentModel.fromMap(doc.data(), doc.id));
+      _contentList.clear();
+      for (final doc in snapshot.docs) {
+        // Purge legacy system seeded content IDs if stored in Firestore from past runs
+        if (doc.id == 'cnt_001' || doc.id == 'cnt_002' || doc.id == 'cnt_003') {
+          _firestore.collection('content').doc(doc.id).delete().catchError((_) {});
+          continue;
         }
-        _contentStream.add(_contentList);
+        _contentList.add(ContentModel.fromMap(doc.data(), doc.id));
       }
+      _contentStream.add(_contentList);
     }, onError: (e) {
       debugPrint("Firestore content stream error: $e");
     });
 
     // 4. Payments Stream
     _firestore.collection('payments').snapshots().listen((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        _payments.clear();
-        for (final doc in snapshot.docs) {
-          _payments.add(PaymentModel.fromMap(doc.data(), doc.id));
-        }
-        _paymentStream.add(_payments);
+      _payments.clear();
+      for (final doc in snapshot.docs) {
+        _payments.add(PaymentModel.fromMap(doc.data(), doc.id));
       }
+      _paymentStream.add(_payments);
     }, onError: (e) {
       debugPrint("Firestore payments stream error: $e");
     });
   }
 
-  /// Auto-seeds initial Firestore database collections if empty
-  void _seedInitialData() {
-    if (_classes.isEmpty) {
-      final initialClasses = [
-        ClassModel(
-          id: 'cls_2026_theory',
-          title: '2026 A/L Combined Maths - Pure & Applied Theory',
-          teacherName: 'Akila Jayaweera',
-          schedule: 'Saturdays 8:00 AM - 1:00 PM',
-          description: 'Comprehensive coverage of Pure Maths (Calculus, Trigonometry) & Applied Maths (Statics, Dynamics).',
-          monthlyFee: 4500.0,
-          active: true,
-        ),
-        ClassModel(
-          id: 'cls_2026_revision',
-          title: '2026 A/L Combined Maths - Applied Revision & Paper Class',
-          teacherName: 'Akila Jayaweera',
-          schedule: 'Sundays 2:00 PM - 6:00 PM',
-          description: 'Speed revision, past paper analysis, and speed test discussions for Applied Maths.',
-          monthlyFee: 4000.0,
-          active: true,
-        ),
-        ClassModel(
-          id: 'cls_2027_theory',
-          title: '2027 A/L Combined Maths - Foundation & Theory',
-          teacherName: 'Akila Jayaweera',
-          schedule: 'Fridays 4:00 PM - 7:30 PM',
-          description: 'Foundation building, quadratic equations, functions & fundamentals for 2027 A/L students.',
-          monthlyFee: 4500.0,
-          active: true,
-        ),
-      ];
-
-      _classes.addAll(initialClasses);
-      _classStream.add(_classes);
-
-      for (final c in initialClasses) {
-        _firestore.collection('classes').doc(c.id).set(c.toMap(), SetOptions(merge: true)).catchError((_) {});
-      }
-    }
-
-    if (_contentList.isEmpty) {
-      final initialContent = [
-        ContentModel(
-          id: 'cnt_001',
-          classId: 'cls_2026_theory',
-          className: '2026 A/L Combined Maths - Pure & Applied Theory',
-          title: 'Pure Maths - Integration Techniques Part 1 (Recorded Lecture)',
-          description: 'Full 3-hour video recording covering integration by parts, substitution, and definite integrals.',
-          type: 'recording',
-          fileUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        ),
-        ContentModel(
-          id: 'cnt_002',
-          classId: 'cls_2026_theory',
-          className: '2026 A/L Combined Maths - Pure & Applied Theory',
-          title: 'Applied Maths - Statics & Friction Study Pack',
-          description: 'Official PDF study pack containing theory notes, solved tutorial questions, and homework problems.',
-          type: 'studypack',
-          fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        ),
-        ContentModel(
-          id: 'cnt_003',
-          classId: 'cls_2026_revision',
-          className: '2026 A/L Combined Maths - Applied Revision & Paper Class',
-          title: '2026 Revision - Model Paper 01 Video Discussion',
-          description: 'Step-by-step marking scheme breakdown for Model Paper 01.',
-          type: 'recording',
-          fileUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        ),
-      ];
-
-      _contentList.addAll(initialContent);
-      _contentStream.add(_contentList);
-
-      for (final cnt in initialContent) {
-        _firestore.collection('content').doc(cnt.id).set(cnt.toMap(), SetOptions(merge: true)).catchError((_) {});
-      }
-    }
-  }
 
   // Getters & Streams
   Stream<List<ClassModel>> get classesStream => _classStream.stream;
@@ -252,7 +175,7 @@ class DatabaseService {
     }
   }
 
-  // Record PayHere Payment
+  // Record Payment & Activate Student Access
   Future<PaymentModel> recordPayment({
     required String studentId,
     required String studentName,
@@ -261,6 +184,7 @@ class DatabaseService {
     required double amount,
     required String payherePaymentId,
     String status = 'success',
+    String paymentMethod = 'Stripe Credit/Debit Card',
   }) async {
     final payment = PaymentModel(
       id: 'pay_${DateTime.now().millisecondsSinceEpoch}',
@@ -271,7 +195,7 @@ class DatabaseService {
       amount: amount,
       payherePaymentId: payherePaymentId,
       status: status,
-      paymentMethod: 'PayHere Gateway',
+      paymentMethod: paymentMethod,
       month: 'October 2026',
     );
 
@@ -298,6 +222,23 @@ class DatabaseService {
         await _firestore.collection('enrollments').doc(old.id).update({
           'paymentStatus': status == 'success' ? 'paid' : 'pending',
         });
+      } catch (_) {}
+    } else {
+      // Automatically create new paid enrollment record if not pre-existing
+      final newEnr = EnrollmentModel(
+        id: 'enr_${DateTime.now().millisecondsSinceEpoch}',
+        studentId: studentId,
+        studentName: studentName,
+        studentEmail: '',
+        classId: classId,
+        className: className,
+        paymentStatus: status == 'success' ? 'paid' : 'pending',
+        validMonth: 'October 2026',
+      );
+      _enrollments.add(newEnr);
+      _enrollmentStream.add(_enrollments);
+      try {
+        await _firestore.collection('enrollments').doc(newEnr.id).set(newEnr.toMap());
       } catch (_) {}
     }
 

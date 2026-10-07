@@ -5,18 +5,18 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Akila Jayaweera Combined Maths LMS Web Application">
+  <meta name="description" content="Akila Com Maths Web Application">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="akila_maths_lms">
+  <meta name="apple-mobile-web-app-title" content="Akila Com Maths">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>Akila Jayaweera - Combined Maths LMS</title>
+  <title>Akila Com Maths</title>
   <link rel="manifest" href="manifest.json">
   <style>
     body {
@@ -52,8 +52,30 @@
 <body>
   <div id="loading-indicator" class="loading-container">
     <div class="spinner"></div>
-    <div style="font-size: 16px; font-weight: 500; letter-spacing: 0.5px;">Loading Akila Maths LMS...</div>
+    <div style="font-size: 16px; font-weight: 500; letter-spacing: 0.5px;">Loading Akila Com Maths...</div>
   </div>
+  <script>
+    function removeLoadingIndicator() {
+      var el = document.getElementById('loading-indicator');
+      if (el) {
+        el.style.opacity = '0';
+        setTimeout(function() {
+          if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        }, 400);
+      }
+    }
+    window.addEventListener('flutter-first-frame', removeLoadingIndicator);
+    var observer = new MutationObserver(function(mutations) {
+      if (document.querySelector('flutter-view')) {
+        removeLoadingIndicator();
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(removeLoadingIndicator, 4500);
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -6,7 +6,7 @@ import 'firebase_options.dart';
 import 'core/constants/app_colors.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
-import 'services/payhere_service.dart';
+import 'services/stripe_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/class_provider.dart';
 import 'providers/content_provider.dart';
@@ -29,7 +29,7 @@ void main() async {
   // Instantiate core backend services
   final authService = AuthService();
   final dbService = DatabaseService();
-  final payHereService = PayHereService(dbService);
+  final stripeService = StripeService(dbService);
 
   runApp(
     MultiProvider(
@@ -38,7 +38,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ClassProvider(dbService)),
         ChangeNotifierProvider(create: (_) => ContentProvider(dbService)),
         ChangeNotifierProvider(
-          create: (_) => PaymentProvider(dbService, payHereService),
+          create: (_) => PaymentProvider(dbService, stripeService),
         ),
       ],
       child: const AkilaMathsLmsApp(),
@@ -52,7 +52,7 @@ class AkilaMathsLmsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Akila Jayaweera Combined Maths LMS',
+      title: 'Akila Com Maths',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

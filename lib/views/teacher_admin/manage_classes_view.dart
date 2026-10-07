@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_styles.dart';
 import '../../core/widgets/custom_text_field.dart';
@@ -33,7 +34,7 @@ class _ManageClassesViewState extends State<ManageClassesView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Manage Combined Maths Classes', style: AppStyles.h2(context)),
-                    Text('Add new batches, edit timetable schedules, and set monthly fees in LKR.', style: AppStyles.bodyMedium),
+                    Text('Add new batches, edit timetable schedules, set monthly fees & Zoom links.', style: AppStyles.bodyMedium),
                   ],
                 ),
                 ElevatedButton.icon(
@@ -50,12 +51,34 @@ class _ManageClassesViewState extends State<ManageClassesView> {
             ),
             const SizedBox(height: 24),
 
-            ListView.builder(
+            if (classes.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(36),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.class_outlined, size: 54, color: AppColors.textLight),
+                    SizedBox(height: 12),
+                    Text('No classes or batches added yet.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    SizedBox(height: 4),
+                    Text('Click "Create New Batch" above to publish your first Combined Maths class.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  ],
+                ),
+              )
+            else
+              ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: classes.length,
               itemBuilder: (context, index) {
                 final item = classes[index];
+                final hasZoom = item.zoomUrl.trim().isNotEmpty;
+
                 return Card(
                   elevation: 2,
                   margin: const EdgeInsets.only(bottom: 16),
@@ -111,6 +134,72 @@ class _ManageClassesViewState extends State<ManageClassesView> {
                         ),
                         const SizedBox(height: 6),
                         Text(item.description, style: AppStyles.bodyMedium),
+                        const SizedBox(height: 10),
+                        
+                        // Zoom Class Status Bar
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: hasZoom ? AppColors.success.withValues(alpha: 0.12) : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: hasZoom ? AppColors.success.withValues(alpha: 0.4) : Colors.grey.shade300,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    hasZoom ? Icons.videocam_rounded : Icons.videocam_off_outlined,
+                                    size: 14,
+                                    color: hasZoom ? AppColors.success : Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    hasZoom ? 'Zoom Link Active' : 'No Zoom Link Set',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: hasZoom ? AppColors.success : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (hasZoom) ...[
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () async {
+                                    final uri = Uri.parse(item.zoomUrl);
+                                    if (await canLaunchUrl(uri)) {
+                                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                    } else {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Cannot open Zoom URL: ${item.zoomUrl}')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: Text(
+                                    item.zoomUrl,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.primary,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+
                         const SizedBox(height: 12),
                         const Divider(),
                         Row(
@@ -143,6 +232,7 @@ class _ManageClassesViewState extends State<ManageClassesView> {
     final descController = TextEditingController(text: existingClass?.description ?? '');
     final scheduleController = TextEditingController(text: existingClass?.schedule ?? '');
     final feeController = TextEditingController(text: existingClass?.monthlyFee.toString() ?? '3500');
+    final zoomUrlController = TextEditingController(text: existingClass?.zoomUrl ?? '');
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -152,7 +242,7 @@ class _ManageClassesViewState extends State<ManageClassesView> {
         title: Text(existingClass == null ? 'Create Combined Maths Batch' : 'Edit Batch Details'),
         content: SingleChildScrollView(
           child: SizedBox(
-            width: 450,
+            width: 480,
             child: Form(
               key: formKey,
               child: Column(
@@ -181,6 +271,12 @@ class _ManageClassesViewState extends State<ManageClassesView> {
                   ),
                   const SizedBox(height: 12),
                   CustomTextField(
+                    controller: zoomUrlController,
+                    label: 'Live Zoom Class Link / Meeting URL',
+                    hint: 'https://us04web.zoom.us/j/1234567890?pwd=...',
+                  ),
+                  const SizedBox(height: 12),
+                  CustomTextField(
                     controller: descController,
                     label: 'Batch Description & Syllabus Coverage',
                     hint: 'Describe topics covered (e.g. Calculus, Statics, Kinematics)...',
@@ -205,6 +301,7 @@ class _ManageClassesViewState extends State<ManageClassesView> {
                   schedule: scheduleController.text.trim(),
                   monthlyFee: double.parse(feeController.text.trim()),
                   teacherName: 'Akila Jayaweera',
+                  zoomUrl: zoomUrlController.text.trim(),
                 );
 
                 if (existingClass == null) {

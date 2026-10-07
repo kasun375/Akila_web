@@ -101,7 +101,7 @@ class StudentPaymentsView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Student Payments & Enrollment Tracker', style: AppStyles.h2(context)),
-                    Text('Track PayHere online checkout transactions and manage student payment records.', style: AppStyles.bodyMedium),
+                    Text('Track online card payment transactions and manage student payment records.', style: AppStyles.bodyMedium),
                   ],
                 ),
                 if (payments.isNotEmpty)

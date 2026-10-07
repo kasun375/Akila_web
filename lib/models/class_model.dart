@@ -8,6 +8,7 @@ class ClassModel {
   final String imageUrl;
   final int studentCount;
   final bool active;
+  final String zoomUrl;
 
   ClassModel({
     required this.id,
@@ -19,6 +20,7 @@ class ClassModel {
     this.imageUrl = "",
     this.studentCount = 0,
     this.active = true,
+    this.zoomUrl = "",
   });
 
   factory ClassModel.fromMap(Map<String, dynamic> map, String id) {
@@ -32,6 +34,7 @@ class ClassModel {
       imageUrl: map['imageUrl'] ?? '',
       studentCount: map['studentCount'] ?? 0,
       active: map['active'] ?? true,
+      zoomUrl: map['zoomUrl'] ?? '',
     );
   }
 
@@ -45,6 +48,7 @@ class ClassModel {
       'imageUrl': imageUrl,
       'studentCount': studentCount,
       'active': active,
+      'zoomUrl': zoomUrl,
     };
   }
 }

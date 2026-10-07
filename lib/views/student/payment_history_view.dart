@@ -27,7 +27,7 @@ class PaymentHistoryView extends StatelessWidget {
           children: [
             Text('My Payment History', style: AppStyles.h2(context)),
             const SizedBox(height: 6),
-            Text('Track all PayHere gateway transactions and monthly class fee receipts.', style: AppStyles.bodyMedium),
+            Text('Track all online payment gateway transactions and monthly class fee receipts.', style: AppStyles.bodyMedium),
             const SizedBox(height: 24),
 
             if (myPayments.isEmpty)
