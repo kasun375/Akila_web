@@ -15,8 +15,27 @@ const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
+const path = require('path');
+const fs = require('fs');
+
+// Determine static path for Flutter Web app (server/public or ../build/web)
+const serverPublicPath = path.join(__dirname, 'public');
+const flutterBuildPath = path.join(__dirname, '../build/web');
+
+let staticPath = null;
+if (fs.existsSync(serverPublicPath)) {
+  staticPath = serverPublicPath;
+} else if (fs.existsSync(flutterBuildPath)) {
+  staticPath = flutterBuildPath;
+}
+
+if (staticPath) {
+  console.log(`📁 Serving Flutter Web App from: ${staticPath}`);
+  app.use(express.static(staticPath));
+}
+
 // Health Check Endpoint
-app.get('/', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
     service: 'Akila Com Maths LMS Payment Backend Server',
@@ -90,6 +109,20 @@ app.get('/verify-payment/:paymentIntentId', async (req, res) => {
     return res.status(500).json({
       success: false,
       error: error.message || 'Failed to verify payment intent',
+    });
+  }
+});
+
+// Wildcard Fallback Route for Single Page Application (Flutter Web)
+app.get('*', (req, res) => {
+  if (staticPath && fs.existsSync(path.join(staticPath, 'index.html'))) {
+    res.sendFile(path.join(staticPath, 'index.html'));
+  } else {
+    res.status(200).json({
+      status: 'online',
+      service: 'Akila Com Maths LMS Payment Backend Server',
+      message: 'Web app build not found in server/public. Run `flutter build web` and copy `build/web` contents to `server/public`.',
+      timestamp: new Date().toISOString(),
     });
   }
 });
