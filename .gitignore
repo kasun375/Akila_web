@@ -50,3 +50,7 @@ app.*.map.json
 key.properties
 key.properties.example
 
+# Node.js
+node_modules/
+.env
+
