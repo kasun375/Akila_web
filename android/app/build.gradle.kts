@@ -50,6 +50,7 @@ android {
 
     buildTypes {
         release {
+            // Signing with Release key from key.properties
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {

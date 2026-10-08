@@ -88,19 +88,19 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1. Full Background Image (Login Uim.jpg for mobile, login_ui1.jpg for desktop/web)
+          // 1. Full Background Image (Login Uim.jpg for mobile app, Login Ui1.jpg for desktop/web app)
           Positioned.fill(
             child: Image.asset(
-              !isDesktop ? 'assets/Login Uim.jpg' : 'assets/login_ui1.jpg',
+              !isDesktop ? 'assets/Login Uim.jpg' : 'assets/Login Ui1.jpg',
               fit: BoxFit.cover,
               alignment: Alignment.center,
               errorBuilder: (context, error, stackTrace) {
                 return Image.asset(
-                  'assets/Login Ui.jpg',
+                  'assets/Login Ui1.jpg',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Image.asset(
-                      'assets/login_ui1.jpg',
+                      'assets/Login Uim.jpg',
                       fit: BoxFit.cover,
                     );
                   },
