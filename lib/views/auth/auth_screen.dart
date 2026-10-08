@@ -82,25 +82,26 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveHelper.isDesktop(context);
+    final isMobile = ResponsiveHelper.isMobile(context);
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1. Full Background Image (Login Uim.jpg for mobile app, Login Ui1.jpg for desktop/web app)
+          // 1. Full Background Image (Login Uim.jpg for mobile app, Login Ui1.jpg for web app)
           Positioned.fill(
             child: Image.asset(
-              !isDesktop ? 'assets/Login Uim.jpg' : 'assets/Login Ui1.jpg',
+              isMobile ? 'assets/Login Uim.jpg' : 'assets/Login Ui1.jpg',
               fit: BoxFit.cover,
               alignment: Alignment.center,
               errorBuilder: (context, error, stackTrace) {
                 return Image.asset(
-                  'assets/Login Ui1.jpg',
+                  isMobile ? 'assets/login_uim.jpg' : 'assets/login_ui1.jpg',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Image.asset(
-                      'assets/Login Uim.jpg',
+                      'assets/Login Ui1.jpg',
                       fit: BoxFit.cover,
                     );
                   },
@@ -110,7 +111,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
           ),
 
           // Dark overlay gradient for mobile screens to guarantee crisp contrast
-          if (!isDesktop)
+          if (isMobile)
             Positioned.fill(
               child: Container(
                 color: Colors.black.withValues(alpha: 0.30),

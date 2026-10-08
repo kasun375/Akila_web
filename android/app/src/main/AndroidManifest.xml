@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <application
-        android:label="akila_maths_lms"
+        android:label="Akila Com Maths"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
