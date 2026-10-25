@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'services/ad_service.dart';
 import 'core/constants/app_colors.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
@@ -25,6 +26,9 @@ void main() async {
   } catch (e) {
     debugPrint("Firebase initialization warning: $e");
   }
+
+  // Initialize AdMob SDK (no-op on web/desktop)
+  await AdService.instance.initialize();
 
   // Instantiate core backend services
   final authService = AuthService();

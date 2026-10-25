@@ -12,6 +12,7 @@ import '../teacher_admin/admin_dashboard_view.dart';
 import '../teacher_admin/manage_classes_view.dart';
 import '../teacher_admin/manage_content_view.dart';
 import '../teacher_admin/student_payments_view.dart';
+import '../../core/widgets/banner_ad_widget.dart';
 
 class ResponsiveNavigation extends StatefulWidget {
   const ResponsiveNavigation({super.key});
@@ -59,11 +60,8 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
               elevation: 0,
               title: Row(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: Image.asset('assets/Logo A.png', width: 26, height: 26, fit: BoxFit.contain),
-                  ),
-                  const SizedBox(width: 10),
+                  const Icon(Icons.calculate_rounded, color: Colors.white, size: 24),
+                  const SizedBox(width: 8),
                   Text(
                     'Akila Com Maths',
                     style: AppStyles.h3(context).copyWith(color: Colors.white, fontSize: 16),
@@ -115,6 +113,9 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
 
                 // Active Page Content
                 Expanded(child: currentView),
+
+                // Banner Ad — visible only on mobile, hidden on desktop/web
+                if (!isDesktop) const BannerAdWidget(),
               ],
             ),
           ),
@@ -151,18 +152,9 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: Image.asset('assets/Logo A.png', width: 32, height: 32, fit: BoxFit.contain),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Akila Com Maths',
-                style: AppStyles.h3(context).copyWith(color: AppColors.primary),
-              ),
-            ],
+          Text(
+            'Combined Maths Learning Management System',
+            style: AppStyles.h3(context).copyWith(color: AppColors.primary),
           ),
           Row(
             children: [
