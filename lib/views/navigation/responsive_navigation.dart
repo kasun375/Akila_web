@@ -60,11 +60,35 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
               elevation: 0,
               title: Row(
                 children: [
-                  const Icon(Icons.calculate_rounded, color: Colors.white, size: 24),
-                  const SizedBox(width: 8),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.asset(
+                        'assets/Logo A1.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => const Icon(
+                          Icons.calculate_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Text(
                     'Akila Com Maths',
-                    style: AppStyles.h3(context).copyWith(color: Colors.white, fontSize: 16),
+                    style: AppStyles.h3(context).copyWith(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -152,16 +176,70 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'Combined Maths Learning Management System',
-            style: AppStyles.h3(context).copyWith(color: AppColors.primary),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/Logo A1.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const Icon(
+                      Icons.calculate_rounded,
+                      color: AppColors.primary,
+                      size: 26,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Akila Com Maths',
+                    style: AppStyles.h3(context).copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const Text(
+                    'Combined Maths LMS',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isAdmin ? AppColors.accent.withOpacity(0.1) : AppColors.success.withOpacity(0.1),
+                  color: isAdmin ? AppColors.accent.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -256,16 +334,27 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
                 Container(
                   width: 44,
                   height: 44,
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white,
                     shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: getProfileImageProvider(
-                            auth.user?.profilePicUrl,
-                            defaultAsset: 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg',
-                          ) ??
-                          const AssetImage('assets/dfd8836b1cc110e21d03c83043dcb710.jpg'),
-                      fit: BoxFit.cover,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/Logo A1.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.calculate_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ),
@@ -284,9 +373,9 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
                         ),
                       ),
                       Text(
-                        'Combined Maths LMS',
+                        'Akila Com Maths',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 11,
                         ),
                       ),
@@ -309,9 +398,9 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 6),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primaryLight.withOpacity(0.2) : Colors.transparent,
+                    color: isSelected ? AppColors.primaryLight.withValues(alpha: 0.2) : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
-                    border: isSelected ? Border.all(color: AppColors.primaryLight.withOpacity(0.4)) : null,
+                    border: isSelected ? Border.all(color: AppColors.primaryLight.withValues(alpha: 0.4)) : null,
                   ),
                   child: ListTile(
                     leading: Icon(
@@ -345,7 +434,7 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.1),
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
