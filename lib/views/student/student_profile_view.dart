@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -99,74 +98,92 @@ class _StudentProfileViewState extends State<StudentProfileView> {
                     ),
                     const SizedBox(height: 24),
 
-                      // Avatar Upload & Preview
-                      Center(
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Tooltip(
-                              message: 'Tap to change profile picture',
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(56),
-                                onTap: _isUploadingPic ? null : () => _uploadProfilePicFromDevice(context),
-                                child: CircleAvatar(
-                                  radius: 52,
-                                  backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
-                                  backgroundImage: getProfileImageProvider(
-                                    _profilePicUrl,
-                                    defaultAsset: auth.isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
-                                  ),
-                                  child: _isUploadingPic
-                                      ? Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withValues(alpha: 0.45),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          alignment: Alignment.center,
-                                          child: const SizedBox(
-                                            width: 28,
-                                            height: 28,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 3,
-                                            ),
-                                          ),
-                                        )
-                                      : (_profilePicUrl.isEmpty && !auth.isAdmin
-                                          ? Text(
-                                              user?.name.isNotEmpty == true ? user!.name[0] : 'S',
-                                              style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.primary),
-                                            )
-                                          : null),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: InkWell(
-                                onTap: _isUploadingPic ? null : () => _uploadProfilePicFromDevice(context),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.2),
-                                        blurRadius: 4,
+                    // Avatar Upload & Preview
+                    Builder(
+                      builder: (context) {
+                        final displayPicUrl = _profilePicUrl.isNotEmpty ? _profilePicUrl : (user?.profilePicUrl ?? '');
+                        return Center(
+                          child: Column(
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Tooltip(
+                                    message: 'Tap to change profile picture',
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(56),
+                                      onTap: _isUploadingPic ? null : () => _uploadProfilePicFromDevice(context),
+                                      child: CircleAvatar(
+                                        radius: 52,
+                                        backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
+                                        backgroundImage: getProfileImageProvider(
+                                          displayPicUrl,
+                                          defaultAsset: auth.isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
+                                        ),
+                                        child: _isUploadingPic
+                                            ? Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black.withValues(alpha: 0.45),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                alignment: Alignment.center,
+                                                child: const SizedBox(
+                                                  width: 28,
+                                                  height: 28,
+                                                  child: CircularProgressIndicator(
+                                                    color: Colors.white,
+                                                    strokeWidth: 3,
+                                                  ),
+                                                ),
+                                              )
+                                            : (displayPicUrl.isEmpty && !auth.isAdmin
+                                                ? Text(
+                                                    user?.name.isNotEmpty == true ? user!.name[0] : 'S',
+                                                    style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                                  )
+                                                : null),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                  child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 18),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: InkWell(
+                                      onTap: _isUploadingPic ? null : () => _uploadProfilePicFromDevice(context),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: Colors.white, width: 2),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.2),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 18),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Tap photo to change',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
 
                       CustomTextField(
                         controller: _nameController,
@@ -332,13 +349,69 @@ class _StudentProfileViewState extends State<StudentProfileView> {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final user = auth.user;
     final storageService = StorageService();
+    final messenger = ScaffoldMessenger.of(context);
 
     ImageSource selectedSource = ImageSource.gallery;
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
 
-    final isMobile = !kIsWeb || (kIsWeb && MediaQuery.of(context).size.width < 768);
-
-    if (isMobile) {
-      final source = await showModalBottomSheet<ImageSource>(
+    final ImageSource? source;
+    if (isDesktop) {
+      source = await showDialog<ImageSource>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            'Change Profile Picture',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
+                ),
+                title: const Text('Choose from Gallery / Files', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Select a photo from device storage'),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+                ),
+                title: const Text('Take a Photo', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Capture using camera / webcam'),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      source = await showModalBottomSheet<ImageSource>(
         context: context,
         backgroundColor: Colors.white,
         shape: const RoundedRectangleBorder(
@@ -377,8 +450,8 @@ class _StudentProfileViewState extends State<StudentProfileView> {
                     ),
                     child: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
                   ),
-                  title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: const Text('Select an image from device gallery'),
+                  title: const Text('Choose from Gallery / Files', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Select a photo from device storage'),
                   onTap: () => Navigator.pop(ctx, ImageSource.gallery),
                 ),
                 ListTile(
@@ -391,7 +464,7 @@ class _StudentProfileViewState extends State<StudentProfileView> {
                     child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
                   ),
                   title: const Text('Take a Photo', style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: const Text('Capture using device camera'),
+                  subtitle: const Text('Capture using camera'),
                   onTap: () => Navigator.pop(ctx, ImageSource.camera),
                 ),
               ],
@@ -399,10 +472,10 @@ class _StudentProfileViewState extends State<StudentProfileView> {
           ),
         ),
       );
-
-      if (source == null) return;
-      selectedSource = source;
     }
+
+    if (source == null) return;
+    selectedSource = source;
 
     setState(() => _isUploadingPic = true);
 
@@ -424,41 +497,37 @@ class _StudentProfileViewState extends State<StudentProfileView> {
           profilePicUrl: newUrl,
         );
 
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          if (success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Profile picture updated successfully!'),
-                backgroundColor: AppColors.success,
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to save profile: ${auth.errorMessage}'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
+        messenger.clearSnackBars();
+        if (success) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Profile picture updated successfully!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        } else {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text('Failed to save profile: ${auth.errorMessage}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
         }
       }
     } catch (e) {
       debugPrint('Error uploading profile pic: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        final isMissingPlugin = e.toString().contains('MissingPluginException');
-        final message = isMissingPlugin
-            ? 'Please restart the mobile app completely to link the camera & gallery picker.'
-            : 'Failed to upload profile picture: $e';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: AppColors.error,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
+      messenger.clearSnackBars();
+      final isMissingPlugin = e.toString().contains('MissingPluginException');
+      final message = isMissingPlugin
+          ? 'Please restart the mobile app completely to link the camera & gallery picker.'
+          : 'Failed to upload profile picture: $e';
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 4),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isUploadingPic = false);

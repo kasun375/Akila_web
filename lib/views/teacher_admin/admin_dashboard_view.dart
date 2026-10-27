@@ -61,7 +61,7 @@ class AdminDashboardView extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ManageClassesView()),
+                        MaterialPageRoute(builder: (context) => const ManageClassesView(openCreateDialog: true)),
                       );
                     },
                   ),

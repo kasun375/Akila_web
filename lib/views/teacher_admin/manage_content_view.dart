@@ -28,8 +28,11 @@ class _ManageContentViewState extends State<ManageContentView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 16,
+              runSpacing: 12,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,13 +148,17 @@ class _ManageContentViewState extends State<ManageContentView> {
     showDialog(
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Upload Content (Recording or Study Pack)'),
-          content: SingleChildScrollView(
-            child: SizedBox(
-              width: 480,
-              child: Form(
+        builder: (context, setDialogState) {
+          final screenWidth = MediaQuery.of(dialogCtx).size.width;
+          final dialogWidth = screenWidth > 540 ? 480.0 : (screenWidth - 32);
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Upload Content (Recording or Study Pack)'),
+            content: SingleChildScrollView(
+              child: SizedBox(
+                width: dialogWidth,
+                child: Form(
                 key: formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -279,8 +286,9 @@ class _ManageContentViewState extends State<ManageContentView> {
               child: const Text('Upload Content', style: TextStyle(color: Colors.white)),
             ),
           ],
-        ),
-      ),
-    );
+        );
+      },
+    ),
+  );
   }
 }

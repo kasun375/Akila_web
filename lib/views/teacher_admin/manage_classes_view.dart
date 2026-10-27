@@ -9,13 +9,25 @@ import '../../providers/class_provider.dart';
 import '../../providers/auth_provider.dart';
 
 class ManageClassesView extends StatefulWidget {
-  const ManageClassesView({super.key});
+  final bool openCreateDialog;
+  const ManageClassesView({super.key, this.openCreateDialog = false});
 
   @override
   State<ManageClassesView> createState() => _ManageClassesViewState();
 }
 
 class _ManageClassesViewState extends State<ManageClassesView> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openCreateDialog) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showAddEditClassDialog(context);
+        }
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
@@ -304,86 +316,99 @@ class _ManageClassesViewState extends State<ManageClassesView> {
 
     showDialog(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(existingClass == null ? 'Create Combined Maths Batch' : 'Edit Batch Details'),
-        content: SingleChildScrollView(
-          child: SizedBox(
-            width: 480,
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CustomTextField(
-                    controller: titleController,
-                    label: 'Class Title',
-                    hint: 'e.g. 2026 Combined Maths Theory',
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextField(
-                    controller: scheduleController,
-                    label: 'Timetable Schedule',
-                    hint: 'e.g. Every Sunday | 8:00 AM - 1:00 PM',
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextField(
-                    controller: feeController,
-                    label: 'Monthly Fee in LKR (Rs.)',
-                    hint: '3500',
-                    keyboardType: TextInputType.number,
-                    validator: (v) => v == null || double.tryParse(v) == null ? 'Enter valid fee' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextField(
-                    controller: zoomUrlController,
-                    label: 'Live Zoom Class Link / Meeting URL',
-                    hint: 'https://us04web.zoom.us/j/1234567890?pwd=...',
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextField(
-                    controller: descController,
-                    label: 'Batch Description & Syllabus Coverage',
-                    hint: 'Describe topics covered (e.g. Calculus, Statics, Kinematics)...',
-                    maxLines: 3,
-                  ),
-                ],
+      builder: (dialogCtx) {
+        final screenWidth = MediaQuery.of(dialogCtx).size.width;
+        final dialogWidth = screenWidth > 540 ? 480.0 : (screenWidth - 32);
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(existingClass == null ? 'Create Combined Maths Batch' : 'Edit Batch Details'),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: dialogWidth,
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CustomTextField(
+                      controller: titleController,
+                      label: 'Class Title',
+                      hint: 'e.g. 2026 Combined Maths Theory',
+                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      controller: scheduleController,
+                      label: 'Timetable Schedule',
+                      hint: 'e.g. Every Sunday | 8:00 AM - 1:00 PM',
+                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      controller: feeController,
+                      label: 'Monthly Fee in LKR (Rs.)',
+                      hint: '3500',
+                      keyboardType: TextInputType.number,
+                      validator: (v) => v == null || double.tryParse(v) == null ? 'Enter valid fee' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      controller: zoomUrlController,
+                      label: 'Live Zoom Class Link / Meeting URL',
+                      hint: 'https://us04web.zoom.us/j/1234567890?pwd=...',
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      controller: descController,
+                      label: 'Batch Description & Syllabus Coverage',
+                      hint: 'Describe topics covered (e.g. Calculus, Statics, Kinematics)...',
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final classProvider = Provider.of<ClassProvider>(context, listen: false);
-                final newModel = ClassModel(
-                  id: existingClass?.id ?? 'cls_${DateTime.now().millisecondsSinceEpoch}',
-                  title: titleController.text.trim(),
-                  description: descController.text.trim(),
-                  schedule: scheduleController.text.trim(),
-                  monthlyFee: double.parse(feeController.text.trim()),
-                  teacherName: 'Akila Jayaweera',
-                  zoomUrl: zoomUrlController.text.trim(),
-                );
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final classProvider = Provider.of<ClassProvider>(context, listen: false);
+                  final newModel = ClassModel(
+                    id: existingClass?.id ?? 'cls_${DateTime.now().millisecondsSinceEpoch}',
+                    title: titleController.text.trim(),
+                    description: descController.text.trim(),
+                    schedule: scheduleController.text.trim(),
+                    monthlyFee: double.parse(feeController.text.trim()),
+                    teacherName: 'Akila Jayaweera',
+                    zoomUrl: zoomUrlController.text.trim(),
+                  );
 
-                if (existingClass == null) {
-                  await classProvider.addClass(newModel);
-                } else {
-                  await classProvider.updateClass(newModel);
+                  if (existingClass == null) {
+                    await classProvider.addClass(newModel);
+                  } else {
+                    await classProvider.updateClass(newModel);
+                  }
+
+                  if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(existingClass == null ? 'New batch created successfully!' : 'Batch details updated!'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  }
                 }
-
-                if (dialogCtx.mounted) Navigator.pop(dialogCtx);
-              }
-            },
-            child: Text(existingClass == null ? 'Create Class' : 'Save Changes', style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+              },
+              child: Text(existingClass == null ? 'Create Class' : 'Save Changes', style: const TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

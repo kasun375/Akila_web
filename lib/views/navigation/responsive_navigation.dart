@@ -126,22 +126,31 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
                     ),
                   ),
                 const SizedBox(width: 2),
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: Colors.white,
+                InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    final profileIdx = navItems.indexWhere((i) => i.title == 'My Profile');
+                    if (profileIdx != -1) {
+                      setState(() => _selectedIndex = profileIdx);
+                    }
+                  },
                   child: CircleAvatar(
-                    radius: 12.5,
-                    backgroundColor: AppColors.mintSoft,
-                    backgroundImage: getProfileImageProvider(
-                      auth.user?.profilePicUrl,
-                      defaultAsset: isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
+                    radius: 14,
+                    backgroundColor: Colors.white,
+                    child: CircleAvatar(
+                      radius: 12.5,
+                      backgroundColor: AppColors.mintSoft,
+                      backgroundImage: getProfileImageProvider(
+                        auth.user?.profilePicUrl,
+                        defaultAsset: isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
+                      ),
+                      child: (auth.user?.profilePicUrl.isEmpty ?? true) && !isAdmin
+                          ? Text(
+                              (auth.user?.name.isNotEmpty == true) ? auth.user!.name[0].toUpperCase() : 'U',
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                            )
+                          : null,
                     ),
-                    child: (auth.user?.profilePicUrl.isEmpty ?? true) && !isAdmin
-                        ? Text(
-                            (auth.user?.name.isNotEmpty == true) ? auth.user!.name[0].toUpperCase() : 'U',
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
-                          )
-                        : null,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -313,38 +322,53 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // User Profile Picture
-              CircleAvatar(
-                radius: 19,
-                backgroundColor: Colors.white,
-                child: CircleAvatar(
-                  radius: 17,
-                  backgroundColor: AppColors.mintSoft,
-                  backgroundImage: getProfileImageProvider(
-                    auth.user?.profilePicUrl,
-                    defaultAsset: isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
-                  ),
-                  child: (auth.user?.profilePicUrl.isEmpty ?? true) && !isAdmin
-                      ? Text(
-                          (auth.user?.name.isNotEmpty == true) ? auth.user!.name[0].toUpperCase() : 'U',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primaryDark,
+              // User Profile Picture & Name (Clickable on Web to view profile)
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  final profileIdx = navItems.indexWhere((i) => i.title == 'My Profile');
+                  if (profileIdx != -1) {
+                    setState(() => _selectedIndex = profileIdx);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(
+                        radius: 19,
+                        backgroundColor: Colors.white,
+                        child: CircleAvatar(
+                          radius: 17,
+                          backgroundColor: AppColors.mintSoft,
+                          backgroundImage: getProfileImageProvider(
+                            auth.user?.profilePicUrl,
+                            defaultAsset: isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
                           ),
-                        )
-                      : null,
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Student / Admin Name in crisp white
-              Text(
-                auth.user?.name ?? 'Kasun Jayaweera',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
+                          child: (auth.user?.profilePicUrl.isEmpty ?? true) && !isAdmin
+                              ? Text(
+                                  (auth.user?.name.isNotEmpty == true) ? auth.user!.name[0].toUpperCase() : 'U',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primaryDark,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        auth.user?.name ?? 'Kasun Jayaweera',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
