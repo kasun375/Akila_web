@@ -96,12 +96,15 @@
     </div>
     <div class="app-title">Akila Com Maths</div>
     <div class="spinner"></div>
-    <div class="footer-text">Akila Jayaweera • Combined Maths</div>
+    <div id="loading-status-text" class="footer-text">Akila Jayaweera • Combined Maths</div>
   </div>
   <script>
+    var isIndicatorRemoved = false;
     function removeLoadingIndicator() {
+      if (isIndicatorRemoved) return;
       var el = document.getElementById('loading-indicator');
       if (el) {
+        isIndicatorRemoved = true;
         el.style.opacity = '0';
         setTimeout(function() {
           if (el && el.parentNode) {
@@ -110,23 +113,51 @@
         }, 400);
       }
     }
+
+    // 1. Listen for Flutter first frame event
     window.addEventListener('flutter-first-frame', removeLoadingIndicator);
+
+    // 2. Observer for Flutter elements mounted to DOM
     var observer = new MutationObserver(function(mutations) {
-      if (document.querySelector('flutter-view')) {
-        removeLoadingIndicator();
+      if (document.querySelector('flutter-view') || document.querySelector('flt-glass-pane')) {
+        setTimeout(removeLoadingIndicator, 200);
         observer.disconnect();
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(removeLoadingIndicator, 4500);
+
+    // 3. Keep user informed during initial/debug loads so they know it is actively working
+    setTimeout(function() {
+      if (!isIndicatorRemoved) {
+        var sub = document.getElementById('loading-status-text');
+        if (sub) sub.textContent = 'Loading modules & assets...';
+      }
+    }, 4000);
+
+    setTimeout(function() {
+      if (!isIndicatorRemoved) {
+        var sub = document.getElementById('loading-status-text');
+        if (sub) sub.textContent = 'Starting application engine...';
+      }
+    }, 8000);
+
+    setTimeout(function() {
+      if (!isIndicatorRemoved) {
+        var sub = document.getElementById('loading-status-text');
+        if (sub) sub.textContent = 'Almost ready...';
+      }
+    }, 15000);
+
+    // Safety fallback timeout (45s) to guarantee indicator is removed even if events fail
+    setTimeout(removeLoadingIndicator, 45000);
   </script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for (let registration of registrations) {
-          registration.unregister();
+        for (var i = 0; i < registrations.length; i++) {
+          registrations[i].unregister();
         }
-      });
+      }).catch(function() {});
     }
   </script>
   <script src="flutter_bootstrap.js" async></script>

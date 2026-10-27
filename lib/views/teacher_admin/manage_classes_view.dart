@@ -6,6 +6,7 @@ import '../../core/constants/app_styles.dart';
 import '../../core/widgets/custom_text_field.dart';
 import '../../models/class_model.dart';
 import '../../providers/class_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class ManageClassesView extends StatefulWidget {
   const ManageClassesView({super.key});
@@ -17,59 +18,125 @@ class ManageClassesView extends StatefulWidget {
 class _ManageClassesViewState extends State<ManageClassesView> {
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
     final classProvider = Provider.of<ClassProvider>(context);
     final classes = classProvider.classes;
 
+    if (!auth.isAdmin) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Access Denied'),
+          backgroundColor: AppColors.primaryDark,
+          foregroundColor: Colors.white,
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.admin_panel_settings_outlined, size: 64, color: AppColors.error),
+              SizedBox(height: 16),
+              Text('Admin Access Required', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Text('Only teacher administrators can add or manage class batches.', style: TextStyle(color: AppColors.textSecondary)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final canPop = Navigator.canPop(context);
+
     return Scaffold(
       backgroundColor: AppColors.bgLight,
+      appBar: canPop
+          ? AppBar(
+              title: const Text('Manage Batch Schedules', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0.5,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+                onPressed: () => Navigator.pop(context),
+              ),
+            )
+          : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Manage Combined Maths Classes', style: AppStyles.h2(context)),
-                    Text('Add new batches, edit timetable schedules, set monthly fees & Zoom links.', style: AppStyles.bodyMedium),
-                  ],
+                Text(
+                  'Manage Combined Maths Classes',
+                  style: AppStyles.h2(context),
+                  textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Add new batches, edit timetable schedules, set monthly fees & Zoom links.',
+                  style: AppStyles.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 2,
                   ),
-                  icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
-                  label: const Text('Create New Batch', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 20),
+                  label: const Text(
+                    'Create New Batch',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
                   onPressed: () => _showAddEditClassDialog(context),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+          ),
+          const SizedBox(height: 24),
 
-            if (classes.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(36),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: const Column(
-                  children: [
-                    Icon(Icons.class_outlined, size: 54, color: AppColors.textLight),
-                    SizedBox(height: 12),
-                    Text('No classes or batches added yet.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    SizedBox(height: 4),
-                    Text('Click "Create New Batch" above to publish your first Combined Maths class.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                  ],
-                ),
-              )
+          if (classes.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: AppColors.mintSoft,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.mintBorder),
+                    ),
+                    child: const Icon(Icons.class_outlined, size: 48, color: AppColors.primary),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No classes or batches added yet.',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textPrimary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Click "Create New Batch" above to publish your first Combined Maths class batch.',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
             else
               ListView.builder(
               shrinkWrap: true,

@@ -60,11 +60,12 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
               backgroundColor: AppColors.primaryDark,
               foregroundColor: Colors.white,
               elevation: 1.5,
+              titleSpacing: 0,
               title: Row(
                 children: [
                   Container(
-                    width: 32,
-                    height: 32,
+                    width: 30,
+                    height: 30,
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -75,55 +76,61 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
                       fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Akila Com Maths',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          height: 1.1,
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Akila Com Maths',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            height: 1.1,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      Text(
-                        'Combined Maths',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 10,
-                          height: 1.1,
+                        Text(
+                          'Combined Maths',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 9,
+                            height: 1.1,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
               actions: [
                 if (isAdmin)
                   Container(
-                    margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    margin: const EdgeInsets.symmetric(vertical: 14, horizontal: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.amber.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.amber),
+                      border: Border.all(color: Colors.amber, width: 0.8),
                     ),
                     child: const Center(
                       child: Text(
                         'ADMIN',
-                        style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Colors.amber, fontSize: 8.5, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
-                // User Profile Picture
+                const SizedBox(width: 2),
                 CircleAvatar(
-                  radius: 15,
+                  radius: 14,
                   backgroundColor: Colors.white,
                   child: CircleAvatar(
-                    radius: 13.5,
+                    radius: 12.5,
                     backgroundColor: AppColors.mintSoft,
                     backgroundImage: getProfileImageProvider(
                       auth.user?.profilePicUrl,
@@ -137,26 +144,26 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
                         : null,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.mintPill,
                       foregroundColor: AppColors.primaryDark,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                      minimumSize: const Size(0, 32),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                      minimumSize: const Size(0, 28),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                     ),
                     onPressed: () => auth.signOut(),
                     child: const Text(
                       'Logout',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.primaryDark),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.5, color: AppColors.primaryDark),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
               ],
             ),
 

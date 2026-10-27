@@ -738,7 +738,9 @@ class _StudentDashboardViewState extends State<StudentDashboardView> {
                     const Icon(Icons.search_off_rounded, size: 48, color: AppColors.textLight),
                     const SizedBox(height: 12),
                     Text(
-                      'No classes match "$_searchQuery"',
+                      classProvider.classes.isEmpty
+                          ? 'No Classes Available Yet'
+                          : 'No classes match "$_searchQuery"',
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 16,
@@ -747,25 +749,29 @@ class _StudentDashboardViewState extends State<StudentDashboardView> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      'Try searching by batch number (e.g. Maths 1), schedule day (e.g. Sunday), or teacher name.',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    Text(
+                      classProvider.classes.isEmpty
+                          ? 'New Combined Maths batches will appear here as soon as the teacher publishes them.'
+                          : 'Try searching by batch number (e.g. Maths 1), schedule day (e.g. Sunday), or teacher name.',
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.mintSoft,
-                        foregroundColor: AppColors.primaryDark,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    if (classProvider.classes.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.mintSoft,
+                          foregroundColor: AppColors.primaryDark,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                        child: const Text('Clear Search Filter', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                      child: const Text('Clear Search Filter', style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
+                    ],
                   ],
                 ),
               )

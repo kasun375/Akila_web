@@ -30,35 +30,43 @@ class AdminDashboardView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Teacher Admin Panel', style: AppStyles.h1(context)),
-                    Text(
-                      'Welcome Mr. Akila Jayaweera • Combined Maths LMS Portal',
-                      style: AppStyles.bodyMedium,
-                    ),
-                  ],
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Teacher Admin Panel',
+                    style: AppStyles.h1(context),
+                    textAlign: TextAlign.center,
                   ),
-                  icon: const Icon(Icons.add_rounded, color: Colors.white),
-                  label: const Text('Add New Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ManageClassesView()),
-                    );
-                  },
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    'Welcome Mr. Akila Jayaweera • Combined Maths LMS Portal',
+                    style: AppStyles.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
+                    ),
+                    icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 20),
+                    label: const Text(
+                      'Create New Batch',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ManageClassesView()),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
 

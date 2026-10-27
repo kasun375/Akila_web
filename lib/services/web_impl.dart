@@ -8,9 +8,31 @@ class WebStorage {
 }
 
 void openWebFilePicker(void Function(String?) onFilePicked) {
-  final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
-  uploadInput.accept = 'image/*';
-  uploadInput.click();
+  final html.FileUploadInputElement uploadInput = html.FileUploadInputElement()
+    ..accept = 'image/*'
+    ..style.display = 'none';
+
+  html.document.body?.children.add(uploadInput);
+
+  bool completed = false;
+  void finish(String? res) {
+    if (!completed) {
+      completed = true;
+      try {
+        uploadInput.remove();
+      } catch (_) {}
+      onFilePicked(res);
+    }
+  }
+
+  // Handle mobile and desktop cancel when file dialog is closed
+  html.window.addEventListener('focus', (e) {
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (!completed && (uploadInput.files == null || uploadInput.files!.isEmpty)) {
+        finish(null);
+      }
+    });
+  });
 
   uploadInput.onChange.listen((e) {
     final files = uploadInput.files;
@@ -22,21 +44,23 @@ void openWebFilePicker(void Function(String?) onFilePicked) {
         final rawUrl = reader.result as String?;
         if (rawUrl != null && rawUrl.startsWith('data:image')) {
           _compressAndResizeWebImage(rawUrl).then((compressedUrl) {
-            onFilePicked(compressedUrl);
+            finish(compressedUrl);
           }).catchError((_) {
-            onFilePicked(rawUrl);
+            finish(rawUrl);
           });
         } else {
-          onFilePicked(rawUrl);
+          finish(rawUrl);
         }
       });
       reader.onError.listen((err) {
-        onFilePicked(null);
+        finish(null);
       });
     } else {
-      onFilePicked(null);
+      finish(null);
     }
   });
+
+  uploadInput.click();
 }
 
 Future<String> _compressAndResizeWebImage(String dataUrl) {

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_styles.dart';
@@ -24,6 +26,7 @@ class _StudentProfileViewState extends State<StudentProfileView> {
   final _schoolController = TextEditingController();
   String _selectedGrade = '2026 A/L';
   String _profilePicUrl = '';
+  bool _isUploadingPic = false;
 
   @override
   void initState() {
@@ -90,7 +93,7 @@ class _StudentProfileViewState extends State<StudentProfileView> {
                     const SizedBox(height: 8),
                     Text(
                       auth.isAdmin
-                          ? 'Update your name, contact details, and upload your profile picture from device storage.'
+                          ? 'Update your name, contact details, and profile picture.'
                           : 'Update your school, grade year, and personal contact details.',
                       style: AppStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                     ),
@@ -99,26 +102,50 @@ class _StudentProfileViewState extends State<StudentProfileView> {
                       // Avatar Upload & Preview
                       Center(
                         child: Stack(
+                          alignment: Alignment.center,
                           children: [
-                            CircleAvatar(
-                              radius: 52,
-                              backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
-                              backgroundImage: getProfileImageProvider(
-                                _profilePicUrl,
-                                defaultAsset: auth.isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
+                            Tooltip(
+                              message: 'Tap to change profile picture',
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(56),
+                                onTap: _isUploadingPic ? null : () => _uploadProfilePicFromDevice(context),
+                                child: CircleAvatar(
+                                  radius: 52,
+                                  backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
+                                  backgroundImage: getProfileImageProvider(
+                                    _profilePicUrl,
+                                    defaultAsset: auth.isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
+                                  ),
+                                  child: _isUploadingPic
+                                      ? Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withValues(alpha: 0.45),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: const SizedBox(
+                                            width: 28,
+                                            height: 28,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 3,
+                                            ),
+                                          ),
+                                        )
+                                      : (_profilePicUrl.isEmpty && !auth.isAdmin
+                                          ? Text(
+                                              user?.name.isNotEmpty == true ? user!.name[0] : 'S',
+                                              style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                            )
+                                          : null),
+                                ),
                               ),
-                              child: _profilePicUrl.isEmpty && !auth.isAdmin
-                                  ? Text(
-                                      user?.name.isNotEmpty == true ? user!.name[0] : 'S',
-                                      style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.primary),
-                                    )
-                                  : null,
                             ),
                             Positioned(
                               bottom: 0,
                               right: 0,
                               child: InkWell(
-                                onTap: () => _uploadProfilePicFromDevice(context),
+                                onTap: _isUploadingPic ? null : () => _uploadProfilePicFromDevice(context),
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
@@ -137,17 +164,6 @@ class _StudentProfileViewState extends State<StudentProfileView> {
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Center(
-                        child: TextButton.icon(
-                          onPressed: () => _uploadProfilePicFromDevice(context),
-                          icon: const Icon(Icons.upload_file_rounded, size: 16, color: AppColors.primary),
-                          label: const Text(
-                            'Upload from Device',
-                            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13),
-                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -317,28 +333,135 @@ class _StudentProfileViewState extends State<StudentProfileView> {
     final user = auth.user;
     final storageService = StorageService();
 
-    final newUrl = await storageService.pickAndUploadProfileImage(userId: user?.uid ?? '');
+    ImageSource selectedSource = ImageSource.gallery;
 
-    if (newUrl != null && mounted) {
-      setState(() => _profilePicUrl = newUrl);
+    final isMobile = !kIsWeb || (kIsWeb && MediaQuery.of(context).size.width < 768);
 
-      // Save profile picture continuously to Firebase Firestore
-      await auth.updateProfile(
-        name: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : (user?.name ?? 'User'),
-        phone: _phoneController.text.trim(),
-        grade: _selectedGrade,
-        school: _schoolController.text.trim(),
-        profilePicUrl: newUrl,
+    if (isMobile) {
+      final source = await showModalBottomSheet<ImageSource>(
+        context: context,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Text(
+                  'Change Profile Picture',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
+                  ),
+                  title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Select an image from device gallery'),
+                  onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+                ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+                  ),
+                  title: const Text('Take a Photo', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Capture using device camera'),
+                  onTap: () => Navigator.pop(ctx, ImageSource.camera),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
 
+      if (source == null) return;
+      selectedSource = source;
+    }
+
+    setState(() => _isUploadingPic = true);
+
+    try {
+      final newUrl = await storageService.pickAndUploadProfileImage(
+        userId: user?.uid ?? '',
+        source: selectedSource,
+      );
+
+      if (newUrl != null && mounted) {
+        setState(() => _profilePicUrl = newUrl);
+
+        // Save profile picture continuously to Firebase Firestore
+        final success = await auth.updateProfile(
+          name: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : (user?.name ?? 'User'),
+          phone: _phoneController.text.trim(),
+          grade: _selectedGrade,
+          school: _schoolController.text.trim(),
+          profilePicUrl: newUrl,
+        );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Profile picture updated successfully!'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to save profile: ${auth.errorMessage}'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error uploading profile pic: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
+        final isMissingPlugin = e.toString().contains('MissingPluginException');
+        final message = isMissingPlugin
+            ? 'Please restart the mobile app completely to link the camera & gallery picker.'
+            : 'Failed to upload profile picture: $e';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile picture saved to Firebase & updated continuously across app!'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 4),
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingPic = false);
       }
     }
   }

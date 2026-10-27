@@ -19,20 +19,7 @@ class DatabaseService {
   final _contentStream = StreamController<List<ContentModel>>.broadcast();
   final _paymentStream = StreamController<List<PaymentModel>>.broadcast();
 
-  static final List<ClassModel> _defaultClasses = List.generate(
-    9,
-    (index) => ClassModel(
-      id: 'cls_2026_applied_theory_${index + 1}',
-      title: 'Combined Maths Applied Theory 2026',
-      description: 'Comprehensive applied mathematics theory, vectors, dynamics, and statics with past paper discussions.',
-      schedule: 'Every Sunday, 7.00 p.m - 9.00 pm',
-      monthlyFee: 170.0,
-      teacherName: 'Akila Jayaweera',
-    ),
-  );
-
   DatabaseService() {
-    _classes.addAll(_defaultClasses);
     _listenToFirestore();
   }
 
@@ -40,19 +27,17 @@ class DatabaseService {
   void _listenToFirestore() {
     // 1. Classes Stream (Admin-created classes only)
     _firestore.collection('classes').snapshots().listen((snapshot) {
-      final validDocs = snapshot.docs.where((doc) =>
-        doc.id != 'cls_2026_theory' &&
-        doc.id != 'cls_2026_revision' &&
-        doc.id != 'cls_2027_theory'
-      ).toList();
-
-      if (validDocs.isNotEmpty) {
-        _classes.clear();
-        for (final doc in validDocs) {
-          _classes.add(ClassModel.fromMap(doc.data(), doc.id));
+      _classes.clear();
+      for (final doc in snapshot.docs) {
+        // Auto-purge any legacy default/seeded class documents
+        if (doc.id.startsWith('cls_2026_applied_theory_') ||
+            doc.id == 'cls_2026_theory' ||
+            doc.id == 'cls_2026_revision' ||
+            doc.id == 'cls_2027_theory') {
+          _firestore.collection('classes').doc(doc.id).delete().catchError((_) {});
+          continue;
         }
-      } else if (_classes.isEmpty) {
-        _classes.addAll(_defaultClasses);
+        _classes.add(ClassModel.fromMap(doc.data(), doc.id));
       }
       _classStream.add(_classes);
     }, onError: (e) {
@@ -63,7 +48,16 @@ class DatabaseService {
     _firestore.collection('enrollments').snapshots().listen((snapshot) {
       _enrollments.clear();
       for (final doc in snapshot.docs) {
-        _enrollments.add(EnrollmentModel.fromMap(doc.data(), doc.id));
+        final data = doc.data();
+        final classId = data['classId']?.toString() ?? '';
+        if (classId.startsWith('cls_2026_applied_theory_') ||
+            classId == 'cls_2026_theory' ||
+            classId == 'cls_2026_revision' ||
+            classId == 'cls_2027_theory') {
+          _firestore.collection('enrollments').doc(doc.id).delete().catchError((_) {});
+          continue;
+        }
+        _enrollments.add(EnrollmentModel.fromMap(data, doc.id));
       }
       _enrollmentStream.add(_enrollments);
     }, onError: (e) {
@@ -105,8 +99,7 @@ class DatabaseService {
   Stream<List<ContentModel>> get contentStream => _contentStream.stream;
   Stream<List<PaymentModel>> get paymentsStream => _paymentStream.stream;
 
-  List<ClassModel> get classes =>
-      _classes.isNotEmpty ? List.unmodifiable(_classes) : List.unmodifiable(_defaultClasses);
+  List<ClassModel> get classes => List.unmodifiable(_classes);
   List<EnrollmentModel> get enrollments => List.unmodifiable(_enrollments);
   List<ContentModel> get contentList => List.unmodifiable(_contentList);
   List<PaymentModel> get payments => List.unmodifiable(_payments);

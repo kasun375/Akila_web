@@ -1,20 +1,51 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'web_helper.dart';
 
 class StorageService {
+  final ImagePicker _picker = ImagePicker();
+
   /// Picks an image file directly from the user's device storage
-  /// Opens OS File Explorer dialog on Web/Desktop/Mobile and reads file data URL
-  Future<String?> pickAndUploadProfileImage({required String userId}) async {
-    if (kIsWeb) {
-      final Completer<String?> completer = Completer<String?>();
-      openWebFilePicker((url) {
-        completer.complete(url);
-      });
-      return completer.future;
-    } else {
-      await Future.delayed(const Duration(milliseconds: 800));
-      return 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300';
+  /// Works across Mobile (Android/iOS Gallery & Camera) and Web.
+  Future<String?> pickAndUploadProfileImage({
+    required String userId,
+    ImageSource source = ImageSource.gallery,
+  }) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 400,
+        maxHeight: 400,
+        imageQuality: 75,
+      );
+
+      if (image == null) return null;
+
+      final Uint8List bytes = await image.readAsBytes();
+      if (bytes.isEmpty) return null;
+      final String base64String = base64Encode(bytes);
+      final String mimeType = image.mimeType ?? 'image/jpeg';
+      return 'data:$mimeType;base64,$base64String';
+    } catch (e) {
+      debugPrint('ImagePicker primary pick error: $e');
+      if (kIsWeb) {
+        try {
+          final Completer<String?> completer = Completer<String?>();
+          openWebFilePicker((url) {
+            if (!completer.isCompleted) completer.complete(url);
+          });
+          return await completer.future.timeout(
+            const Duration(minutes: 2),
+            onTimeout: () => null,
+          );
+        } catch (webErr) {
+          debugPrint('Web fallback picker error: $webErr');
+          rethrow;
+        }
+      }
+      rethrow;
     }
   }
 
