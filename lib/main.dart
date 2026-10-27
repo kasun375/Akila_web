@@ -14,6 +14,7 @@ import 'providers/content_provider.dart';
 import 'providers/payment_provider.dart';
 import 'views/auth/auth_screen.dart';
 import 'views/navigation/responsive_navigation.dart';
+import 'views/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,8 +51,23 @@ void main() async {
   );
 }
 
-class AkilaMathsLmsApp extends StatelessWidget {
+class AkilaMathsLmsApp extends StatefulWidget {
   const AkilaMathsLmsApp({super.key});
+
+  @override
+  State<AkilaMathsLmsApp> createState() => _AkilaMathsLmsAppState();
+}
+
+class _AkilaMathsLmsAppState extends State<AkilaMathsLmsApp> {
+  bool _showSplash = true;
+
+  void _onSplashComplete() {
+    if (mounted) {
+      setState(() {
+        _showSplash = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +84,19 @@ class AkilaMathsLmsApp extends StatelessWidget {
           secondary: AppColors.secondary,
           surface: Colors.white,
         ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          elevation: 1.5,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          ),
+        ),
+        dialogTheme: const DialogThemeData(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+        ),
         textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme),
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.primary,
@@ -75,37 +104,39 @@ class AkilaMathsLmsApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 550),
-            reverseDuration: const Duration(milliseconds: 500),
-            switchOutCurve: Curves.easeInCubic,
-            switchInCurve: Curves.easeOutCubic,
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              final isAuth = child.key == const ValueKey('AuthScreen');
-              if (isAuth) {
-                // Login screen slides smoothly to left as it exits
-                final slideOut = Tween<Offset>(
-                  begin: const Offset(-1.0, 0.0),
-                  end: Offset.zero,
-                ).animate(animation);
-                return SlideTransition(position: slideOut, child: child);
-              } else {
-                // Dashboard screen enters sliding from right to left
-                final slideIn = Tween<Offset>(
-                  begin: const Offset(1.0, 0.0),
-                  end: Offset.zero,
-                ).animate(animation);
-                return SlideTransition(position: slideIn, child: child);
-              }
-            },
-            child: !auth.isAuthenticated
-                ? const AuthScreen(key: ValueKey('AuthScreen'))
-                : const ResponsiveNavigation(key: ValueKey('MainAppScreen')),
-          );
-        },
-      ),
+      home: _showSplash
+          ? SplashScreen(onComplete: _onSplashComplete)
+          : Consumer<AuthProvider>(
+              builder: (context, auth, _) {
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 550),
+                  reverseDuration: const Duration(milliseconds: 500),
+                  switchOutCurve: Curves.easeInCubic,
+                  switchInCurve: Curves.easeOutCubic,
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    final isAuth = child.key == const ValueKey('AuthScreen');
+                    if (isAuth) {
+                      // Login screen slides smoothly to left as it exits
+                      final slideOut = Tween<Offset>(
+                        begin: const Offset(-1.0, 0.0),
+                        end: Offset.zero,
+                      ).animate(animation);
+                      return SlideTransition(position: slideOut, child: child);
+                    } else {
+                      // Dashboard screen enters sliding from right to left
+                      final slideIn = Tween<Offset>(
+                        begin: const Offset(1.0, 0.0),
+                        end: Offset.zero,
+                      ).animate(animation);
+                      return SlideTransition(position: slideIn, child: child);
+                    }
+                  },
+                  child: !auth.isAuthenticated
+                      ? const AuthScreen(key: ValueKey('AuthScreen'))
+                      : const ResponsiveNavigation(key: ValueKey('MainAppScreen')),
+                );
+              },
+            ),
     );
   }
 }

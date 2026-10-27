@@ -225,18 +225,17 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Clean Modern Blue & White Dialog Header
+              // Clean White Dialog Header (No Blue)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: Colors.white,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
+                  ),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFE2E8F0)),
                   ),
                 ),
                 child: Row(
@@ -244,10 +243,10 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.credit_card_rounded, color: Colors.white, size: 24),
+                      child: const Icon(Icons.credit_card_rounded, color: Color(0xFF0F172A), size: 24),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -257,17 +256,17 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
                           Text(
                             'Pay Class Fees',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFF0F172A),
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 0.3,
+                              letterSpacing: -0.3,
                             ),
                           ),
                           SizedBox(height: 2),
                           Text(
                             '256-Bit Encrypted Secure Checkout',
                             style: TextStyle(
-                              color: Colors.white70,
+                              color: Color(0xFF64748B),
                               fontSize: 12,
                             ),
                           ),
@@ -275,7 +274,7 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.white),
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
                       onPressed: () => Navigator.of(context).pop(
                         StripeResponse(
                           status: StripeStatus.cancelled,
@@ -354,13 +353,13 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
                             margin: const EdgeInsets.only(right: 8),
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFDBEAFE),
+                              color: const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               _cardBrand,
                               style: const TextStyle(
-                                color: Color(0xFF1E40AF),
+                                color: Color(0xFF0F172A),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.5,
@@ -436,13 +435,13 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Monthly Order Summary Box (Soft Blue & White Tint)
+                      // Monthly Order Summary Box (Clean White, No Blue)
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFBFDBFE)),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -453,11 +452,11 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
                                 children: [
                                   Row(
                                     children: const [
-                                      Icon(Icons.check_circle_outline_rounded, size: 14, color: Color(0xFF2563EB)),
+                                      Icon(Icons.check_circle_outline_rounded, size: 14, color: Color(0xFF10B981)),
                                       SizedBox(width: 4),
                                       Text(
                                         'Monthly Class Fee:',
-                                        style: TextStyle(color: Color(0xFF1E40AF), fontSize: 11, fontWeight: FontWeight.bold),
+                                        style: TextStyle(color: Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
@@ -465,7 +464,7 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
                                   Text(
                                     widget.classItem.title,
                                     style: const TextStyle(
-                                      color: Color(0xFF1E3A8A),
+                                      color: Color(0xFF0F172A),
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -478,7 +477,7 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
                             Text(
                               'Rs. ${widget.classItem.monthlyFee.toStringAsFixed(2)} LKR',
                               style: const TextStyle(
-                                color: Color(0xFF2563EB),
+                                color: Color(0xFF0F172A),
                                 fontSize: 17,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -489,18 +488,18 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
 
                       const SizedBox(height: 24),
 
-                      // Primary Action Submit Button (Vibrant Blue)
+                      // Primary Action Submit Button (Emerald Green, No Blue)
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2563EB),
+                            backgroundColor: const Color(0xFF10B981),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            elevation: 3,
+                            elevation: 1,
                           ),
                           onPressed: _isProcessing ? null : _processStripePayment,
                           child: _isProcessing
@@ -572,10 +571,10 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-      prefixIcon: Icon(icon, color: const Color(0xFF2563EB), size: 20),
+      prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 20),
       suffixIcon: suffix,
       filled: true,
-      fillColor: const Color(0xFFF8FAFC),
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -583,7 +582,7 @@ class _StripeCheckoutDialogState extends State<StripeCheckoutDialog> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+        borderSide: const BorderSide(color: Color(0xFF0F172A), width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

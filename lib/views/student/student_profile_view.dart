@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_styles.dart';
@@ -7,6 +8,7 @@ import '../../core/widgets/custom_text_field.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/utils/profile_image_helper.dart';
 import '../../services/storage_service.dart';
+import 'payment_history_view.dart';
 
 class StudentProfileView extends StatefulWidget {
   const StudentProfileView({super.key});
@@ -62,28 +64,37 @@ class _StudentProfileViewState extends State<StudentProfileView> {
         child: Center(
           child: SizedBox(
             width: 600,
-            child: Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        auth.isAdmin ? 'Teacher Admin Profile' : 'Student Profile Details',
-                        style: AppStyles.h2(context),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        auth.isAdmin
-                            ? 'Update your name, contact details, and upload your profile picture from device storage.'
-                            : 'Update your school, grade year, and personal contact details.',
-                        style: AppStyles.bodyMedium,
-                      ),
-                      const SizedBox(height: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.05),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(32),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      auth.isAdmin ? 'Teacher Admin Profile' : 'Student Profile Details',
+                      style: AppStyles.h2(context).copyWith(color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      auth.isAdmin
+                          ? 'Update your name, contact details, and upload your profile picture from device storage.'
+                          : 'Update your school, grade year, and personal contact details.',
+                      style: AppStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 24),
 
                       // Avatar Upload & Preview
                       Center(
@@ -230,6 +241,67 @@ class _StudentProfileViewState extends State<StudentProfileView> {
                           }
                         },
                       ),
+                      if (!auth.isAdmin) ...[
+                        const SizedBox(height: 24),
+                        const Divider(color: Color(0xFFE2E8F0)),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.mintSoft,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primaryLight.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.receipt_long_rounded, color: AppColors.primary, size: 24),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Payment Receipts & History',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const Text(
+                                      'View slips, verified transactions and monthly fee records.',
+                                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const PaymentHistoryView()),
+                                  );
+                                },
+                                child: const Text('View Receipts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -237,9 +309,8 @@ class _StudentProfileViewState extends State<StudentProfileView> {
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
   Future<void> _uploadProfilePicFromDevice(BuildContext context) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);

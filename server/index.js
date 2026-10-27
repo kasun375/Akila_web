@@ -30,7 +30,17 @@ let staticPath = candidatePaths.find((p) => fs.existsSync(path.join(p, 'index.ht
 
 if (staticPath) {
   console.log(`📁 Serving Flutter Web App from: ${staticPath}`);
-  app.use(express.static(staticPath));
+  app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+  });
+  app.use(express.static(staticPath, {
+    setHeaders: (res, filePath) => {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }));
 } else {
   console.warn("⚠️ Flutter Web build index.html not found in any standard path.");
 }

@@ -312,6 +312,25 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               style: GoogleFonts.poppins(color: Colors.black54, fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ),
+          const SizedBox(height: 6),
+
+          // Teacher / Admin Quick Access
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF0F172A),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
+            icon: const Icon(Icons.admin_panel_settings_rounded, size: 18, color: Color(0xFFFF9100)),
+            label: Text(
+              'Teacher / Admin Sign In (akila@admin.com)',
+              style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
+            ),
+            onPressed: () async {
+              _loginEmailController.text = 'admin@akilamaths.lk';
+              _loginPasswordController.text = 'admin123';
+              await auth.signIn('admin@akilamaths.lk', 'admin123');
+            },
+          ),
         ],
       ),
     );

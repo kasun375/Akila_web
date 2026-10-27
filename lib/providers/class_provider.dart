@@ -39,6 +39,16 @@ class ClassProvider extends ChangeNotifier {
     return _classes.where((c) => enrolledClassIds.contains(c.id)).toList();
   }
 
+  // Student's Paid Enrolled Classes (strictly paid classes only, excludes pending)
+  List<ClassModel> getStudentPaidClasses(String studentId) {
+    final paidClassIds = _enrollments
+        .where((e) => e.studentId == studentId && e.paymentStatus.toLowerCase() == 'paid')
+        .map((e) => e.classId)
+        .toSet();
+
+    return _classes.where((c) => paidClassIds.contains(c.id)).toList();
+  }
+
   // Enrollment for specific student and class
   EnrollmentModel? getEnrollment(String studentId, String classId) {
     try {

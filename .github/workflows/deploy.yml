@@ -26,11 +26,12 @@ jobs:
         run: flutter pub get
 
       - name: 🏗️ Build Flutter Web
-        run: flutter build web --release --base-href "/Akila_web/"
+        run: flutter build web --release --base-href "/"
 
       - name: 🚀 Deploy to GitHub Pages
-        uses: PeaceIris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build/web
           publish_branch: gh-pages
+          cname: akilacommaths.com

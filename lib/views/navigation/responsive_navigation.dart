@@ -1,18 +1,16 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_styles.dart';
 import '../../core/utils/responsive_helper.dart';
-import '../../core/utils/profile_image_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../student/student_dashboard_view.dart';
+import '../student/enrolled_classes_view.dart';
 import '../student/student_profile_view.dart';
-import '../student/payment_history_view.dart';
 import '../teacher_admin/admin_dashboard_view.dart';
-import '../teacher_admin/manage_classes_view.dart';
-import '../teacher_admin/manage_content_view.dart';
-import '../teacher_admin/student_payments_view.dart';
 import '../../core/widgets/banner_ad_widget.dart';
+import '../../core/utils/profile_image_helper.dart';
 
 class ResponsiveNavigation extends StatefulWidget {
   const ResponsiveNavigation({super.key});
@@ -27,21 +25,20 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    final isDesktop = ResponsiveHelper.isDesktop(context);
+    final isDesktop = ResponsiveHelper.isDesktop(context) ||
+        (kIsWeb && MediaQuery.of(context).size.width >= 800);
     final isAdmin = auth.isAdmin;
 
-    // Define navigation items based on User Role
+    // Admin section show ONLY for admin students / teachers
     final navItems = isAdmin
         ? [
             const NavDestination(title: 'Admin Dashboard', icon: Icons.dashboard_rounded, view: AdminDashboardView()),
-            const NavDestination(title: 'Manage Classes', icon: Icons.class_rounded, view: ManageClassesView()),
-            const NavDestination(title: 'Upload Content', icon: Icons.video_library_rounded, view: ManageContentView()),
-            const NavDestination(title: 'Students & Payments', icon: Icons.payments_rounded, view: StudentPaymentsView()),
+            const NavDestination(title: 'Student View', icon: Icons.school_rounded, view: StudentDashboardView()),
             const NavDestination(title: 'My Profile', icon: Icons.person_rounded, view: StudentProfileView()),
           ]
         : [
             const NavDestination(title: 'My Dashboard', icon: Icons.grid_view_rounded, view: StudentDashboardView()),
-            const NavDestination(title: 'Payment History', icon: Icons.receipt_long_rounded, view: PaymentHistoryView()),
+            const NavDestination(title: 'Enrolled Classes', icon: Icons.school_rounded, view: EnrolledClassesView()),
             const NavDestination(title: 'My Profile', icon: Icons.person_rounded, view: StudentProfileView()),
           ];
 
@@ -53,65 +50,123 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
 
     return Scaffold(
       backgroundColor: AppColors.bgLight,
-      appBar: !isDesktop
-          ? AppBar(
-              backgroundColor: AppColors.primary,
+      body: Column(
+        children: [
+          // Top Navigation Bar (Desktop & Tablet Web)
+          if (isDesktop)
+            _buildDesktopTopNavBar(context, auth, navItems, isAdmin)
+          else
+            AppBar(
+              backgroundColor: AppColors.primaryDark,
               foregroundColor: Colors.white,
-              elevation: 0,
+              elevation: 1.5,
               title: Row(
                 children: [
                   Container(
                     width: 32,
                     height: 32,
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.asset(
-                        'assets/Logo A1.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const Icon(
-                          Icons.calculate_rounded,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                      ),
+                    child: Image.asset(
+                      'assets/Logo A1.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Akila Com Maths',
-                    style: AppStyles.h3(context).copyWith(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Akila Com Maths',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                        ),
+                      ),
+                      Text(
+                        'Combined Maths',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 10,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               actions: [
-                Chip(
-                  avatar: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      auth.user?.name.isNotEmpty == true ? auth.user!.name[0] : 'U',
-                      style: const TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold),
+                if (isAdmin)
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.amber),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'ADMIN',
+                        style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
-                  label: Text(
-                    isAdmin ? 'TEACHER ADMIN' : 'STUDENT',
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                // User Profile Picture
+                CircleAvatar(
+                  radius: 15,
+                  backgroundColor: Colors.white,
+                  child: CircleAvatar(
+                    radius: 13.5,
+                    backgroundColor: AppColors.mintSoft,
+                    backgroundImage: getProfileImageProvider(
+                      auth.user?.profilePicUrl,
+                      defaultAsset: isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
+                    ),
+                    child: (auth.user?.profilePicUrl.isEmpty ?? true) && !isAdmin
+                        ? Text(
+                            (auth.user?.name.isNotEmpty == true) ? auth.user!.name[0].toUpperCase() : 'U',
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                          )
+                        : null,
                   ),
-                  backgroundColor: isAdmin ? AppColors.accent : AppColors.success,
-                  side: BorderSide.none,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.mintPill,
+                      foregroundColor: AppColors.primaryDark,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                      minimumSize: const Size(0, 32),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    ),
+                    onPressed: () => auth.signOut(),
+                    child: const Text(
+                      'Logout',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.primaryDark),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
               ],
-            )
-          : null,
+            ),
+
+          // Active Page View
+          Expanded(child: currentView),
+
+          // Banner Ad — mobile only
+          if (!isDesktop) const BannerAdWidget(),
+        ],
+      ),
 
       drawer: !isDesktop
           ? Drawer(
@@ -119,40 +174,15 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
             )
           : null,
 
-      body: Row(
-        children: [
-          // Sidebar for Desktop & Tablet
-          if (isDesktop)
-            SizedBox(
-              width: 260,
-              child: _buildSidebarContent(context, auth, navItems, isAdmin),
-            ),
-
-          // Main View Container
-          Expanded(
-            child: Column(
-              children: [
-                // Top Header Bar for Desktop Web
-                if (isDesktop) _buildDesktopHeader(context, auth, navItems, isAdmin),
-
-                // Active Page Content
-                Expanded(child: currentView),
-
-                // Banner Ad — visible only on mobile, hidden on desktop/web
-                if (!isDesktop) const BannerAdWidget(),
-              ],
-            ),
-          ),
-        ],
-      ),
-
-      // Bottom Navigation Bar for Mobile
       bottomNavigationBar: !isDesktop
           ? BottomNavigationBar(
+              backgroundColor: Colors.white,
               currentIndex: _selectedIndex,
               onTap: (idx) => setState(() => _selectedIndex = idx),
               selectedItemColor: AppColors.primary,
               unselectedItemColor: AppColors.textSecondary,
+              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+              unselectedLabelStyle: const TextStyle(fontSize: 10),
               type: BottomNavigationBarType.fixed,
               items: navItems
                   .map((item) => BottomNavigationBarItem(
@@ -165,144 +195,172 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
     );
   }
 
-  Widget _buildDesktopHeader(BuildContext context, AuthProvider auth, List<NavDestination> navItems, bool isAdmin) {
+  Widget _buildDesktopTopNavBar(
+    BuildContext context,
+    AuthProvider auth,
+    List<NavDestination> navItems,
+    bool isAdmin,
+  ) {
     return Container(
-      height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      decoration: BoxDecoration(
+        color: AppColors.primaryDark,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryDark.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+          // ── Brand Logo & Text (Left - Matching Untitled.png) ──────
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => setState(() => _selectedIndex = 0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
                   child: Image.asset(
                     'assets/Logo A1.png',
                     fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => const Icon(
-                      Icons.calculate_rounded,
-                      color: AppColors.primary,
-                      size: 26,
-                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Akila Com Maths',
-                    style: AppStyles.h3(context).copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  const Text(
-                    'Combined Maths LMS',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isAdmin ? AppColors.accent.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
+                const SizedBox(width: 10),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      isAdmin ? Icons.verified_user_rounded : Icons.school_rounded,
-                      size: 16,
-                      color: isAdmin ? AppColors.accent : AppColors.success,
-                    ),
-                    const SizedBox(width: 6),
                     Text(
-                      isAdmin ? 'TEACHER / ADMIN' : auth.user?.grade ?? 'STUDENT',
-                      style: TextStyle(
-                        fontSize: 12,
+                      'Akila Com Maths',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.bold,
-                        color: isAdmin ? AppColors.accent : AppColors.success,
+                        height: 1.15,
+                      ),
+                    ),
+                    Text(
+                      'Combined Maths',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w400,
+                        height: 1.15,
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  final profileIdx = navItems.indexWhere((item) => item.title == 'My Profile');
-                  if (profileIdx != -1) {
-                    setState(() => _selectedIndex = profileIdx);
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: AppColors.primaryLight,
-                        backgroundImage: getProfileImageProvider(
-                          auth.user?.profilePicUrl,
-                          defaultAsset: isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
+              ],
+            ),
+          ),
+
+          // ── Center Navigation Items (Green & White Theme) ─────────
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(navItems.length, (index) {
+                final item = navItems[index];
+                final isSelected = _selectedIndex == index;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => setState(() => _selectedIndex = index),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        item.title,
+                        style: TextStyle(
+                          color: isSelected ? AppColors.mintPill : Colors.white.withValues(alpha: 0.9),
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          fontSize: 14.5,
+                          letterSpacing: 0.1,
                         ),
-                        child: (auth.user?.profilePicUrl.isEmpty == true) && !isAdmin
-                            ? Text(
-                                auth.user?.name.isNotEmpty == true ? auth.user!.name[0] : 'U',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                              )
-                            : null,
                       ),
-                      const SizedBox(width: 12),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            auth.user?.name ?? 'User',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+
+          // ── Right: User Profile Avatar, Name & Light Green Logout ──
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // User Profile Picture
+              CircleAvatar(
+                radius: 19,
+                backgroundColor: Colors.white,
+                child: CircleAvatar(
+                  radius: 17,
+                  backgroundColor: AppColors.mintSoft,
+                  backgroundImage: getProfileImageProvider(
+                    auth.user?.profilePicUrl,
+                    defaultAsset: isAdmin ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '',
+                  ),
+                  child: (auth.user?.profilePicUrl.isEmpty ?? true) && !isAdmin
+                      ? Text(
+                          (auth.user?.name.isNotEmpty == true) ? auth.user!.name[0].toUpperCase() : 'U',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryDark,
                           ),
-                          Text(
-                            auth.user?.email ?? '',
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ],
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Student / Admin Name in crisp white
+              Text(
+                auth.user?.name ?? 'Kasun Jayaweera',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 15,
+                ),
+              ),
+
+              const SizedBox(width: 18),
+
+              // Light pastel green Logout button matching Untitled.png
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFC7F9CC),
+                  foregroundColor: const Color(0xFF064E3B),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () => auth.signOut(),
+                child: const Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                    color: Color(0xFF064E3B),
                   ),
                 ),
               ),
@@ -429,18 +487,46 @@ class _ResponsiveNavigationState extends State<ResponsiveNavigation> {
 
           const Divider(color: Colors.white24, height: 1),
 
+          if (isAdmin)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white38),
+                  minimumSize: const Size(double.infinity, 42),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                icon: const Icon(
+                  Icons.school_rounded,
+                  size: 18,
+                  color: AppColors.success,
+                ),
+                label: const Text(
+                  'Switch to Student View',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                onPressed: () {
+                  auth.switchRole('student');
+                  setState(() => _selectedIndex = 0);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
+
           // Sign Out Button
           Padding(
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.mintPill,
+                foregroundColor: AppColors.primaryDark,
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
               ),
-              icon: const Icon(Icons.logout_rounded, size: 18),
-              label: const Text('Sign Out'),
+              icon: const Icon(Icons.logout_rounded, size: 18, color: AppColors.primaryDark),
+              label: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
               onPressed: () => auth.signOut(),
             ),
           ),

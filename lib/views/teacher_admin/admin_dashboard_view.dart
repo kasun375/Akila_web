@@ -43,38 +43,20 @@ class AdminDashboardView extends StatelessWidget {
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.primary, width: 1.5),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                      label: const Text('Pre-Register Email', style: TextStyle(fontWeight: FontWeight.bold)),
-                      onPressed: () {
-                        _showPreRegisterDialog(context);
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      icon: const Icon(Icons.add_rounded, color: Colors.white),
-                      label: const Text('Add New Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ManageClassesView()),
-                        );
-                      },
-                    ),
-                  ],
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  icon: const Icon(Icons.add_rounded, color: Colors.white),
+                  label: const Text('Add New Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ManageClassesView()),
+                    );
+                  },
                 ),
               ],
             ),
@@ -229,8 +211,13 @@ class AdminDashboardView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              color: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              elevation: 1.5,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: classProvider.enrollments.isEmpty
@@ -331,8 +318,13 @@ class AdminDashboardView extends StatelessWidget {
     required String subText,
   }) {
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 1.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -340,7 +332,7 @@ class AdminDashboardView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 28),
@@ -373,8 +365,13 @@ class AdminDashboardView extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 1.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),

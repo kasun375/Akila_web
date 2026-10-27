@@ -124,8 +124,13 @@ class StudentPaymentsView extends StatelessWidget {
               children: [
                 Expanded(
                   child: Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    color: Colors.white,
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 1.5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
@@ -145,8 +150,13 @@ class StudentPaymentsView extends StatelessWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    color: Colors.white,
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 1.5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
@@ -156,7 +166,7 @@ class StudentPaymentsView extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             '${payments.where((p) => p.status == "success").length} Payments',
-                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary),
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
                           ),
                         ],
                       ),
@@ -169,8 +179,13 @@ class StudentPaymentsView extends StatelessWidget {
 
             // Transaction History Table with Delete
             Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              color: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              elevation: 1.5,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -223,7 +238,7 @@ class StudentPaymentsView extends StatelessWidget {
                             return DataRow(cells: [
                               DataCell(Text(p.studentName, style: const TextStyle(fontWeight: FontWeight.w600))),
                               DataCell(Text(p.className)),
-                              DataCell(Text(AppStyles.formatLKR(p.amount), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary))),
+                              DataCell(Text(AppStyles.formatLKR(p.amount), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F172A)))),
                               DataCell(Text(p.payherePaymentId, style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
                               DataCell(Text(dateStr)),
                               DataCell(StatusBadge(status: p.status)),
@@ -246,8 +261,13 @@ class StudentPaymentsView extends StatelessWidget {
 
             // Enrolled Students Payment Table
             Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              color: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              elevation: 1.5,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(

@@ -25,9 +25,9 @@ class PaymentHistoryView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('My Payment History', style: AppStyles.h2(context)),
+            Text('My Payment History', style: AppStyles.h2(context).copyWith(color: AppColors.textPrimary)),
             const SizedBox(height: 6),
-            Text('Track all online payment gateway transactions and monthly class fee receipts.', style: AppStyles.bodyMedium),
+            Text('Track all online payment gateway transactions and monthly class fee receipts.', style: AppStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
             const SizedBox(height: 24),
 
             if (myPayments.isEmpty)
@@ -38,6 +38,13 @@ class PaymentHistoryView extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: const Column(
                   children: [
@@ -57,27 +64,33 @@ class PaymentHistoryView extends StatelessWidget {
                   final formattedDate = DateFormat('MMM dd, yyyy • hh:mm a').format(p.timestamp);
 
                   return Card(
-                    elevation: 2,
+                    color: Colors.white,
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 1,
                     margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(18),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity(0.1),
+                              color: AppColors.mintSoft,
                               shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.mintBorder),
                             ),
-                            child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 24),
+                            child: const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 24),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(p.className, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                Text(p.className, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.textPrimary)),
                                 const SizedBox(height: 4),
                                 Text(
                                   'Ref: ${p.payherePaymentId} • ${p.month}',

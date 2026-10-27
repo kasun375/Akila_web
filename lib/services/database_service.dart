@@ -19,7 +19,20 @@ class DatabaseService {
   final _contentStream = StreamController<List<ContentModel>>.broadcast();
   final _paymentStream = StreamController<List<PaymentModel>>.broadcast();
 
+  static final List<ClassModel> _defaultClasses = List.generate(
+    9,
+    (index) => ClassModel(
+      id: 'cls_2026_applied_theory_${index + 1}',
+      title: 'Combined Maths Applied Theory 2026',
+      description: 'Comprehensive applied mathematics theory, vectors, dynamics, and statics with past paper discussions.',
+      schedule: 'Every Sunday, 7.00 p.m - 9.00 pm',
+      monthlyFee: 170.0,
+      teacherName: 'Akila Jayaweera',
+    ),
+  );
+
   DatabaseService() {
+    _classes.addAll(_defaultClasses);
     _listenToFirestore();
   }
 
@@ -27,16 +40,19 @@ class DatabaseService {
   void _listenToFirestore() {
     // 1. Classes Stream (Admin-created classes only)
     _firestore.collection('classes').snapshots().listen((snapshot) {
-      _classes.clear();
-      for (final doc in snapshot.docs) {
-        // Purge legacy system seeded IDs if stored in Firestore from past runs
-        if (doc.id == 'cls_2026_theory' ||
-            doc.id == 'cls_2026_revision' ||
-            doc.id == 'cls_2027_theory') {
-          _firestore.collection('classes').doc(doc.id).delete().catchError((_) {});
-          continue;
+      final validDocs = snapshot.docs.where((doc) =>
+        doc.id != 'cls_2026_theory' &&
+        doc.id != 'cls_2026_revision' &&
+        doc.id != 'cls_2027_theory'
+      ).toList();
+
+      if (validDocs.isNotEmpty) {
+        _classes.clear();
+        for (final doc in validDocs) {
+          _classes.add(ClassModel.fromMap(doc.data(), doc.id));
         }
-        _classes.add(ClassModel.fromMap(doc.data(), doc.id));
+      } else if (_classes.isEmpty) {
+        _classes.addAll(_defaultClasses);
       }
       _classStream.add(_classes);
     }, onError: (e) {
@@ -89,7 +105,8 @@ class DatabaseService {
   Stream<List<ContentModel>> get contentStream => _contentStream.stream;
   Stream<List<PaymentModel>> get paymentsStream => _paymentStream.stream;
 
-  List<ClassModel> get classes => List.unmodifiable(_classes);
+  List<ClassModel> get classes =>
+      _classes.isNotEmpty ? List.unmodifiable(_classes) : List.unmodifiable(_defaultClasses);
   List<EnrollmentModel> get enrollments => List.unmodifiable(_enrollments);
   List<ContentModel> get contentList => List.unmodifiable(_contentList);
   List<PaymentModel> get payments => List.unmodifiable(_payments);
