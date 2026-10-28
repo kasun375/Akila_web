@@ -16,11 +16,12 @@ ImageProvider? getProfileImageProvider(String? url, {String defaultAsset = ''}) 
     return AssetImage(cleanUrl);
   }
 
-  if (cleanUrl.startsWith('data:image')) {
+  if (cleanUrl.startsWith('data:') || (cleanUrl.length > 200 && !cleanUrl.startsWith('http'))) {
     try {
       final base64Parts = cleanUrl.split(',');
       final base64Str = base64Parts.length > 1 ? base64Parts[1] : base64Parts[0];
-      final bytes = base64Decode(base64Str);
+      final cleanBase64 = base64Str.replaceAll(RegExp(r'\s+'), '');
+      final bytes = base64Decode(cleanBase64);
       return MemoryImage(bytes);
     } catch (e) {
       debugPrint('Error decoding base64 profile image: $e');

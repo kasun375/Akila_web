@@ -15,6 +15,9 @@ class AuthService {
   UserModel? _currentUser;
   final StreamController<UserModel?> _userStreamController = StreamController<UserModel?>.broadcast();
 
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _userDocSubscription;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _userEmailDocSubscription;
+
   static final Map<String, String> _profilePicCache = {};
 
   // Pre-registered / Allowed emails set
@@ -95,6 +98,11 @@ class AuthService {
           }
           _currentUser = UserModel.fromMap(map, uid);
           _userStreamController.add(_currentUser);
+
+          // Immediately attach real-time Firestore sync for restored user
+          if (_currentUser != null && _currentUser!.uid.isNotEmpty) {
+            _startListeningToUserDoc(_currentUser!.uid, _currentUser!.email);
+          }
         }
       } catch (e) {
         debugPrint("Restore session error: $e");
@@ -127,20 +135,170 @@ class AuthService {
     }
   }
 
-  String _getSavedProfilePic(String uid, String fallbackPic) {
-    if (_profilePicCache.containsKey(uid) && _profilePicCache[uid]!.isNotEmpty) {
+  /// Cancels active real-time Firestore user listeners
+  void _stopListeningToUserDoc() {
+    _userDocSubscription?.cancel();
+    _userDocSubscription = null;
+    _userEmailDocSubscription?.cancel();
+    _userEmailDocSubscription = null;
+  }
+
+  /// Listens in real time to Firestore user document and email updates across mobile & web
+  void _startListeningToUserDoc(String uid, String email) {
+    if (uid.isEmpty) return;
+    _stopListeningToUserDoc();
+
+    try {
+      _userDocSubscription = _firestore
+          .collection('users')
+          .doc(uid)
+          .snapshots()
+          .listen((snapshot) {
+        if (snapshot.exists && snapshot.data() != null) {
+          _handleRemoteUserUpdate(snapshot.data()!, uid);
+        }
+      }, onError: (e) {
+        debugPrint("User doc snapshot error: $e");
+      });
+    } catch (e) {
+      debugPrint("Failed to start user doc listener: $e");
+    }
+
+    final lowerEmail = email.trim().toLowerCase();
+    if (lowerEmail.isNotEmpty) {
+      try {
+        _userEmailDocSubscription = _firestore
+            .collection('users')
+            .where('email', isEqualTo: lowerEmail)
+            .snapshots()
+            .listen((querySnapshot) {
+          for (final doc in querySnapshot.docs) {
+            if (doc.exists && doc.data().isNotEmpty) {
+              final remotePic = (doc.data()['profilePicUrl'] as String? ?? '').trim();
+              if (remotePic.isNotEmpty && remotePic != _currentUser?.profilePicUrl) {
+                _handleRemoteUserUpdate(doc.data(), _currentUser?.uid ?? uid);
+                break;
+              }
+            }
+          }
+        }, onError: (e) {
+          debugPrint("User email query snapshot error: $e");
+        });
+      } catch (e) {
+        debugPrint("Failed to start user email doc listener: $e");
+      }
+    }
+  }
+
+  /// Applies remote Firestore document updates simultaneously across devices
+  void _handleRemoteUserUpdate(Map<String, dynamic> data, String uid) {
+    final remoteUser = UserModel.fromMap(data, uid);
+    if (_currentUser == null) {
+      _currentUser = remoteUser;
+      _persistUser(_currentUser!);
+      _userStreamController.add(_currentUser);
+      return;
+    }
+
+    final remotePic = remoteUser.profilePicUrl.trim();
+    final currentPic = _currentUser!.profilePicUrl.trim();
+
+    bool changed = false;
+    UserModel updated = _currentUser!;
+
+    if (remotePic.isNotEmpty && remotePic != currentPic) {
+      updated = updated.copyWith(profilePicUrl: remotePic);
+      _profilePicCache[uid] = remotePic;
+      _profilePicCache[_currentUser!.uid] = remotePic;
+      if (kIsWeb) {
+        WebStorage.localStorage['profile_pic_$uid'] = remotePic;
+        WebStorage.localStorage['profile_pic_${_currentUser!.uid}'] = remotePic;
+        WebStorage.localStorage['last_profile_pic'] = remotePic;
+      }
+      changed = true;
+    }
+
+    if (remoteUser.name.isNotEmpty && remoteUser.name != _currentUser!.name) {
+      updated = updated.copyWith(name: remoteUser.name);
+      changed = true;
+    }
+    if (remoteUser.phone.isNotEmpty && remoteUser.phone != _currentUser!.phone) {
+      updated = updated.copyWith(phone: remoteUser.phone);
+      changed = true;
+    }
+    if (remoteUser.grade.isNotEmpty && remoteUser.grade != _currentUser!.grade) {
+      updated = updated.copyWith(grade: remoteUser.grade);
+      changed = true;
+    }
+    if (remoteUser.school.isNotEmpty && remoteUser.school != _currentUser!.school) {
+      updated = updated.copyWith(school: remoteUser.school);
+      changed = true;
+    }
+    if (remoteUser.role.isNotEmpty && remoteUser.role != _currentUser!.role) {
+      updated = updated.copyWith(role: remoteUser.role);
+      changed = true;
+    }
+
+    if (changed) {
+      _currentUser = updated;
+      _persistUser(_currentUser!);
+      _userStreamController.add(_currentUser);
+      debugPrint("Real-time profile sync applied: remotePic updated=${remotePic != currentPic}");
+    }
+  }
+
+  Future<String> _findCloudProfilePic(String uid, String email, String currentDocPic) async {
+    final cleanDocPic = currentDocPic.trim();
+    if (cleanDocPic.isNotEmpty && !cleanDocPic.contains('unsplash.com') && !cleanDocPic.startsWith('assets/')) {
+      return cleanDocPic;
+    }
+    final lowerEmail = email.trim().toLowerCase();
+    if (lowerEmail.isNotEmpty) {
+      try {
+        final query = await _firestore.collection('users').where('email', isEqualTo: lowerEmail).limit(1).get();
+        if (query.docs.isNotEmpty) {
+          final qPic = (query.docs.first.data()['profilePicUrl'] as String? ?? '').trim();
+          if (qPic.isNotEmpty && !qPic.contains('unsplash.com') && !qPic.startsWith('assets/')) {
+            return qPic;
+          }
+        }
+      } catch (e) {
+        debugPrint("Find cloud pic by email error: $e");
+      }
+    }
+    return cleanDocPic;
+  }
+
+  String _getSavedProfilePic(String uid, String firestoreOrFallbackPic) {
+    final cleanCloudPic = firestoreOrFallbackPic.trim();
+
+    // 1. If Firestore / cloud provided an actual uploaded profile picture, that is the single source of truth!
+    if (cleanCloudPic.isNotEmpty && !cleanCloudPic.startsWith('assets/') && !cleanCloudPic.contains('unsplash.com')) {
+      _profilePicCache[uid] = cleanCloudPic;
+      if (kIsWeb) {
+        WebStorage.localStorage['profile_pic_$uid'] = cleanCloudPic;
+        WebStorage.localStorage['last_profile_pic'] = cleanCloudPic;
+      }
+      return cleanCloudPic;
+    }
+
+    // 2. Otherwise fall back to memory cache
+    if (_profilePicCache.containsKey(uid) && _profilePicCache[uid]!.isNotEmpty && !_profilePicCache[uid]!.contains('unsplash.com')) {
       return _profilePicCache[uid]!;
     }
+
+    // 3. Otherwise fall back to web local storage
     if (kIsWeb) {
       try {
         final saved = WebStorage.localStorage['profile_pic_$uid'] ?? WebStorage.localStorage['last_profile_pic'];
-        if (saved != null && saved.isNotEmpty) {
+        if (saved != null && saved.isNotEmpty && !saved.contains('unsplash.com') && !saved.startsWith('assets/')) {
           _profilePicCache[uid] = saved;
           return saved;
         }
       } catch (_) {}
     }
-    return fallbackPic;
+
+    return firestoreOrFallbackPic;
   }
 
   void _listenToAuthState() {
@@ -150,20 +308,23 @@ class AuthService {
           // Keep active restored session in web demo mode
           return;
         }
+        _stopListeningToUserDoc();
         _currentUser = null;
         _userStreamController.add(null);
       } else {
         try {
+          final lowerEmail = (firebaseUser.email ?? '').toLowerCase().trim();
           final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
           if (doc.exists && doc.data() != null) {
             final userFromDoc = UserModel.fromMap(doc.data()!, firebaseUser.uid);
-            final persistentPic = _getSavedProfilePic(firebaseUser.uid, userFromDoc.profilePicUrl);
+            final cloudPic = await _findCloudProfilePic(firebaseUser.uid, lowerEmail, userFromDoc.profilePicUrl);
+            final persistentPic = _getSavedProfilePic(firebaseUser.uid, cloudPic);
             _currentUser = userFromDoc.copyWith(profilePicUrl: persistentPic);
           } else {
-            final lowerEmail = (firebaseUser.email ?? '').toLowerCase();
+            final cloudPic = await _findCloudProfilePic(firebaseUser.uid, lowerEmail, '');
             final isTeacher = lowerEmail.contains('akila') || lowerEmail.contains('admin') || lowerEmail.contains('teacher');
             final defaultPic = isTeacher ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '';
-            final persistentPic = _getSavedProfilePic(firebaseUser.uid, firebaseUser.photoURL ?? defaultPic);
+            final persistentPic = _getSavedProfilePic(firebaseUser.uid, cloudPic.isNotEmpty ? cloudPic : (firebaseUser.photoURL ?? defaultPic));
 
             _currentUser = UserModel(
               uid: firebaseUser.uid,
@@ -179,6 +340,7 @@ class AuthService {
           }
           _persistUser(_currentUser!);
           _userStreamController.add(_currentUser);
+          _startListeningToUserDoc(firebaseUser.uid, firebaseUser.email ?? '');
         } catch (e) {
           debugPrint("AuthState fetch user error: $e");
         }
@@ -202,12 +364,14 @@ class AuthService {
       final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists && doc.data() != null) {
         final userFromDoc = UserModel.fromMap(doc.data()!, uid);
-        final persistentPic = _getSavedProfilePic(uid, userFromDoc.profilePicUrl);
+        final cloudPic = await _findCloudProfilePic(uid, lower, userFromDoc.profilePicUrl);
+        final persistentPic = _getSavedProfilePic(uid, cloudPic);
         _currentUser = userFromDoc.copyWith(profilePicUrl: persistentPic);
       } else {
+        final cloudPic = await _findCloudProfilePic(uid, lower, '');
         final isTeacher = lower.contains('admin') || lower.contains('akila') || lower.contains('teacher');
         final defaultPic = isTeacher ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '';
-        final persistentPic = _getSavedProfilePic(uid, defaultPic);
+        final persistentPic = _getSavedProfilePic(uid, cloudPic.isNotEmpty ? cloudPic : defaultPic);
 
         _currentUser = UserModel(
           uid: uid,
@@ -223,6 +387,7 @@ class AuthService {
       }
       _persistUser(_currentUser!);
       _userStreamController.add(_currentUser);
+      _startListeningToUserDoc(uid, lower);
       return _currentUser!;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -280,6 +445,7 @@ class AuthService {
       await _firestore.collection('users').doc(uid).set(_currentUser!.toMap(), SetOptions(merge: true));
       _persistUser(_currentUser!);
       _userStreamController.add(_currentUser);
+      _startListeningToUserDoc(uid, lower);
       return _currentUser!;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
@@ -341,12 +507,14 @@ class AuthService {
 
       if (doc.exists && doc.data() != null) {
         final userFromDoc = UserModel.fromMap(doc.data()!, uid);
-        final persistentPic = _getSavedProfilePic(uid, userFromDoc.profilePicUrl);
+        final cloudPic = await _findCloudProfilePic(uid, lower, userFromDoc.profilePicUrl);
+        final persistentPic = _getSavedProfilePic(uid, cloudPic);
         _currentUser = userFromDoc.copyWith(profilePicUrl: persistentPic);
       } else {
+        final cloudPic = await _findCloudProfilePic(uid, lower, '');
         final isTeacher = lower.contains('akila') || lower.contains('admin');
         final defaultPic = firebaseUser.photoURL ?? (isTeacher ? 'assets/dfd8836b1cc110e21d03c83043dcb710.jpg' : '');
-        final persistentPic = _getSavedProfilePic(uid, defaultPic);
+        final persistentPic = _getSavedProfilePic(uid, cloudPic.isNotEmpty ? cloudPic : defaultPic);
 
         _currentUser = UserModel(
           uid: uid,
@@ -363,6 +531,7 @@ class AuthService {
 
       _persistUser(_currentUser!);
       _userStreamController.add(_currentUser);
+      _startListeningToUserDoc(uid, lower);
       return _currentUser!;
     } catch (e) {
       debugPrint("Google Sign-In error: $e. Falling back to Google demo mode.");
@@ -372,6 +541,7 @@ class AuthService {
 
   // Sign Out
   Future<void> signOut() async {
+    _stopListeningToUserDoc();
     try {
       await _auth.signOut();
       if (!kIsWeb) {
@@ -460,6 +630,18 @@ class AuthService {
     );
     _persistUser(_currentUser!);
     _userStreamController.add(_currentUser);
+    _startListeningToUserDoc(uid, lowerEmail);
+
+    if (lowerEmail.isNotEmpty) {
+      _findCloudProfilePic(uid, lowerEmail, '').then((pic) {
+        if (pic.isNotEmpty && _currentUser != null && _currentUser!.profilePicUrl != pic) {
+          _currentUser = _currentUser!.copyWith(profilePicUrl: pic);
+          _persistUser(_currentUser!);
+          _userStreamController.add(_currentUser);
+        }
+      }).catchError((_) {});
+    }
+
     return _currentUser!;
   }
 
@@ -492,6 +674,7 @@ class AuthService {
     );
     _persistUser(_currentUser!);
     _userStreamController.add(_currentUser);
+    _startListeningToUserDoc(uid, lower);
     return _currentUser!;
   }
 
@@ -511,6 +694,7 @@ class AuthService {
     );
     _persistUser(_currentUser!);
     _userStreamController.add(_currentUser);
+    _startListeningToUserDoc(uid, 'student.google@akilamaths.lk');
     return _currentUser!;
   }
 }

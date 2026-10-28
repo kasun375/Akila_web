@@ -25,6 +25,7 @@ class _StudentProfileViewState extends State<StudentProfileView> {
   final _schoolController = TextEditingController();
   String _selectedGrade = '2026 A/L';
   String _profilePicUrl = '';
+  String? _lastSyncedUserPic;
   bool _isUploadingPic = false;
 
   @override
@@ -41,6 +42,7 @@ class _StudentProfileViewState extends State<StudentProfileView> {
               ? user.grade
               : (user.isAdmin ? 'Teacher / Lecturer' : '2026 A/L');
           _profilePicUrl = user.profilePicUrl;
+          _lastSyncedUserPic = user.profilePicUrl;
         });
       }
     });
@@ -58,6 +60,12 @@ class _StudentProfileViewState extends State<StudentProfileView> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final user = auth.user;
+
+    // Keep _profilePicUrl synchronized with real-time cloud updates (e.g., from mobile)
+    if (!_isUploadingPic && user != null && user.profilePicUrl != _lastSyncedUserPic) {
+      _lastSyncedUserPic = user.profilePicUrl;
+      _profilePicUrl = user.profilePicUrl;
+    }
 
     return Scaffold(
       backgroundColor: AppColors.bgLight,
@@ -101,7 +109,9 @@ class _StudentProfileViewState extends State<StudentProfileView> {
                     // Avatar Upload & Preview
                     Builder(
                       builder: (context) {
-                        final displayPicUrl = _profilePicUrl.isNotEmpty ? _profilePicUrl : (user?.profilePicUrl ?? '');
+                        final displayPicUrl = (_isUploadingPic && _profilePicUrl.isNotEmpty)
+                            ? _profilePicUrl
+                            : ((user?.profilePicUrl.isNotEmpty ?? false) ? user!.profilePicUrl : _profilePicUrl);
                         return Center(
                           child: Column(
                             children: [
@@ -264,7 +274,7 @@ class _StudentProfileViewState extends State<StudentProfileView> {
                               phone: _phoneController.text.trim(),
                               grade: _selectedGrade,
                               school: _schoolController.text.trim(),
-                              profilePicUrl: _profilePicUrl,
+                              profilePicUrl: _profilePicUrl.isNotEmpty ? _profilePicUrl : (user?.profilePicUrl ?? ''),
                             );
                             if (success && context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
